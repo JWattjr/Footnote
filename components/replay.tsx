@@ -1,0 +1,8 @@
+'use client';
+import {useState} from 'react';
+import Link from 'next/link';
+import replay from '@/public/recheck-test.json';
+import {ArrowRight,RefreshCw} from 'lucide-react';
+export default function Replay(){const [corrected,setCorrected]=useState(false);const state=corrected?replay.after:replay.before;
+  return <section className="proof-page"><Link href="/">Back to evidence desk</Link><h1>Watch a source change.</h1><p><strong>Test-only replay.</strong> Mocked post and source responses from the direct contract test. No live publisher correction is claimed.</p><p>{replay.claim}</p><div className="label-pair"><div className={'evidence-label '+state.evidence_label.toLowerCase()}><span>Evidence · simulated version {corrected?'2':'1'}</span><strong>{state.evidence_label==='SUPPORTED'?'Supported':'Contradicted'}</strong></div><div className="tone-label"><span>Tone · kept separate</span><strong>Not rage bait</strong></div></div><h2>The source response</h2><blockquote>{state.citations[0].quote}</blockquote><p className="small">The source URL in this test is mocked. This fictional archive statement does not come from Wikipedia or a real Bluesky post.</p><button className="primary" onClick={()=>setCorrected(!corrected)}><RefreshCw size={16}/>{corrected?'Reset replay':'Apply mocked correction'}<ArrowRight size={16}/></button><p>Version one stays in the record. The Recheck contract emitted <code>{replay.emittedMethod}</code> with expected version {replay.expectedVersion}, grounded in the newly fetched mocked quotation.</p><a href="/recheck-test.json">Inspect the direct-test output</a></section>;
+}

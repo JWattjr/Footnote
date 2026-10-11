@@ -1,0 +1,1 @@
+Independent finish review: ship. All three original fixes resolved: initial mobile quote visible within 390x844 viewport, immutable historical evidence selection, and enlarged mobile hit areas. Browser guard/overflow checks passed. This covers design scope, not consensus or wallet execution.
