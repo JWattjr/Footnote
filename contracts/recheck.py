@@ -8,7 +8,12 @@ from urllib.parse import urlsplit, quote
 from genlayer import *
 
 GEN = 10**18
-WINDOW = 72 * 3600
+DEFAULT_APPEAL_WINDOW = 72 * 3600
+DEFAULT_CANCEL_GRACE = 24 * 3600
+
+def checked_window(value, name):
+    require(type(value) is int and 300 <= value <= 30 * 86400, name + " must be between 5 minutes and 30 days")
+    return value
 EVIDENCE = ('SUPPORTED', 'CONTRADICTED', 'UNSUPPORTED', 'MISLEADING')
 TONES = ('RAGE_BAIT', 'NOT_RAGE_BAIT', 'UNCLEAR')
 
@@ -191,6 +196,8 @@ class FootnoteRecheck(gl.Contract):
         note = json.loads(gl.get_contract_at(self.notes).view().get_note(note_id))
         require(note['status'] == 'active', 'note is awaiting finality')
         config = json.loads(gl.get_contract_at(self.notes).view().get_config())
+        require(not gl.get_contract_at(Address(config['appeals'])).view().has_open_appeal(note_id),
+                'note has an open appeal; recheck after it is decided')
         extra = json.loads(extra_sources_json)
         require(type(extra) is list and len(extra) <= 8, 'invalid added sources')
         urls = sources_checked(note['sources'] + extra, config['hosts'])

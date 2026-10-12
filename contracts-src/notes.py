@@ -1,4 +1,5 @@
 class FootnoteNotes(gl.Contract):
+    appeal_window_seconds: u256
     owner: Address
     recheck: Address
     appeals: Address
@@ -11,7 +12,8 @@ class FootnoteNotes(gl.Contract):
     post_counts: TreeMap[str, u256]
     pending: TreeMap[str, str]
 
-    def __init__(self, hosts_json: str):
+    def __init__(self, hosts_json: str, appeal_window_seconds: int = DEFAULT_APPEAL_WINDOW):
+        self.appeal_window_seconds = u256(checked_window(appeal_window_seconds, "appeal window"))
         require(int(gl.message.chain_id) == 61999, 'StudioNet only')
         self.owner = gl.message.sender_address
         hosts = json.loads(hosts_json)
@@ -60,7 +62,7 @@ class FootnoteNotes(gl.Contract):
                   'version': 1, 'history': [], 'open': True}
         self._save(note_id, record)
         self.ids.append(note_id)
-        self.pending[note_id] = packed({'version': 1, 'decision': stored(decision), 'reason': 'CREATED', 'operation': ''})
+        self.pending[note_id] = packed({'version': 1, 'decision': {**stored(decision), 'sources': urls}, 'reason': 'CREATED', 'operation': ''})
         self.open_counts[writer] = u256(count + 1)
         self.post_counts[key] = u256(post_count + 1)
         gl.get_contract_at(gl.message.contract_address).emit(on='finalized').finalize_note(note_id, 1)
@@ -70,6 +72,8 @@ class FootnoteNotes(gl.Contract):
         require(self.wired and gl.message.sender_address in (self.recheck, self.appeals), 'only Recheck or Appeals may update labels')
         require((gl.message.sender_address == self.recheck and reason == 'RECHECK') or
                 (gl.message.sender_address == self.appeals and reason == 'APPEAL'), 'caller reason mismatch')
+        if reason == 'RECHECK':
+            require(not gl.get_contract_at(self.appeals).view().has_open_appeal(note_id), 'note has an open appeal; recheck after it is decided')
         record = self._get(note_id)
         require(record['status'] == 'active' and record['version'] == expected_version and note_id not in self.pending,
                 'note version changed or update pending')
@@ -109,6 +113,12 @@ class FootnoteNotes(gl.Contract):
         if update['version'] != version:
             return
         record = self._get(note_id)
+        if update['reason'] == 'RECHECK' and gl.get_contract_at(self.appeals).view().has_open_appeal(note_id):
+            # An appeal opened after staging: discard the staged recheck, preserve its appealed version.
+            record['status'] = 'active'
+            self._save(note_id, record)
+            del self.pending[note_id]
+            return
         record['history'].append({**update, 'at': now()})
         record['version'], record['status'] = version, 'active'
         record['sources'] = update['decision'].get('sources', record['sources'])
@@ -116,8 +126,16 @@ class FootnoteNotes(gl.Contract):
         del self.pending[note_id]
 
     @gl.public.write
+    def resume_note(self, note_id: str) -> None:
+        require(note_id in self.pending, 'note has no pending callback')
+        update = json.loads(self.pending[note_id])
+        gl.get_contract_at(gl.message.contract_address).emit(on='finalized').finalize_note(note_id, update['version'])
+
+    @gl.public.write
     def close_note(self, note_id: str) -> None:
         require(gl.message.sender_address == self.bonds, 'only Bonds closes open quota')
+        if note_id not in self.notes:
+            return
         record = self._get(note_id)
         if record['open']:
             record['open'] = False
@@ -135,7 +153,7 @@ class FootnoteNotes(gl.Contract):
 
     @gl.public.view
     def get_config(self) -> str:
-        return packed({'wired': self.wired, 'hosts': list(self.hosts), 'recheck': str(self.recheck),
+        return packed({'appeal_window_seconds': int(self.appeal_window_seconds), 'wired': self.wired, 'hosts': list(self.hosts), 'recheck': str(self.recheck),
                        'appeals': str(self.appeals), 'bonds': str(self.bonds)})
 
     @gl.public.view

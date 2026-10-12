@@ -2,9 +2,13 @@
 
 Is this viral post backed by its sources, and is it built to provoke? Footnote attaches source-grounded community notes to public Bluesky posts. GenLayer validators independently fetch the post and its sources. Evidence gets SUPPORTED, CONTRADICTED, UNSUPPORTED, or MISLEADING; tone separately gets RAGE_BAIT, NOT_RAGE_BAIT, or UNCLEAR.
 
-UNSUPPORTED is a valid stored judgment. New evidence can create a new version. The original is never rewritten. Anyone can contest a note version during its 72-hour window. Writers lock 2–20 simulated GEN; successful appellants receive overturned writer bonds. Withdrawals use pull payments and independently verified native credit.
+UNSUPPORTED is a valid stored judgment. New evidence can create a new version. The original is never rewritten. Anyone can contest a note version during its configured appeal window. Writers lock 2–20 simulated GEN; successful appellants receive overturned writer bonds. Withdrawals use pull payments and independently verified native credit.
 
 Live app: [footnote-genlayer.vercel.app](https://footnote-genlayer.vercel.app). Public repository: [JWattjr/Footnote](https://github.com/JWattjr/Footnote).
+
+Timing disclosure: the public demo deployment uses a 15-minute appeal window; production default is 72 hours. The demo cancellation grace is 10 minutes and bond release delay is 15 minutes. Constructor defaults are 72 hours for appeals and bond release, and 24 hours for cancellation grace. Every window must be 5 minutes–30 days; bond release delay must cover the appeal window. Deadlines use real chain time and run from the original writer stake; finalization consumes part of that window.
+
+Appeal funding goes directly into Bonds before opening the appeal. Rechecks are rejected before fetching while an appeal is open. Anyone can cancel a stale version or an unjudged appeal after its deadline plus grace, recovering the full deposit through a verified pull withdrawal. Unused funding and stalled callbacks have recovery methods. The previous immutable deployment and its held writer bonds remain separately archived in `docs/legacy/v1`; the app now targets generation 2.
 
 ## Deployed contracts
 
@@ -12,10 +16,10 @@ StudioNet, chain **61999**, RPC `https://studio.genlayer.com/api`. The reproduci
 
 | Contract | Address | Responsibility |
 |---|---|---|
-| Notes | `0x2b027eE3e14662E2D70cb0C94edD46f18473EcF9` | Exclusive note state, judgments and immutable versions |
-| Recheck | `0x875453E32f1b7E1B319Ecb7052176a258919F515` | Independent source rereads, new evidence and bounded inconclusive attempts |
-| Bonds | `0xBDd887bAD156dE83147823DaaA3838480Aa17b1b` | Writer escrow, appeal deposits, reputation, verified pull payouts |
-| Appeals | `0xd99886f31cEB34Cd9E5D050aeBB152A8f93e7Cf0` | One contest per version, counter-evidence, UPHELD/OVERTURNED/UNCERTAIN |
+| Notes | `0xA71d317f87AAa68287901bAF1C6210F34AAD3675` | Exclusive note state, judgments and immutable versions |
+| Recheck | `0x24AE6019820999664F95085e0775Cfe6968BB082` | Independent source rereads, new evidence and bounded inconclusive attempts |
+| Bonds | `0x55CE2f217257e9CB94C83954ff635c5131Ef71ba` | Writer escrow, appeal deposits, reputation, verified pull payouts |
+| Appeals | `0x45FC5215210E8D7A856cC630923a26b216cD9565` | One contest per version, counter-evidence, UPHELD/OVERTURNED/UNCERTAIN |
 
 These are deployment addresses, not a claim that every requested live flow is proven. See [PROOF_MANIFEST.md](docs/PROOF_MANIFEST.md) for the exact evidence and remaining gaps.
 

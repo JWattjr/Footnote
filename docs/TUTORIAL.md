@@ -33,7 +33,7 @@ Click **Write a note**, enter the note ID, AT URI and source URLs, and choose a 
 def stake(self, note_id: str) -> None:
     require(2 * GEN <= int(gl.message.value) <= 20 * GEN,
             'bond 2–20 simulated GEN')
-    # Reserve writer, amount and immutable 72-hour deadline.
+    # Reserve writer, amount and immutable configured deadline.
     gl.get_contract_at(gl.message.contract_address).emit(
         on='finalized').finalize_stake(note_id)
 ```
@@ -69,9 +69,9 @@ A source change must be real to count as live proof. If no actual publisher corr
 
 ## Contest a version
 
-The same panel offers **Contest note · 2 GEN**. Anyone may appeal during the original 72-hour bond window; the app does not pretend to authenticate the post author as a wallet. An appeal reserves one `note:version` key and forwards its deposit to Bonds on finality. **Judge appeal** becomes meaningful once that deposit is held. Validators answer UPHELD, OVERTURNED or UNCERTAIN using independently fetched counter-evidence.
+The panel offers **Fund appeal · 2 GEN** followed by **Contest note**. First finalize funding directly in Bonds, then open the nonpayable appeal during the configured window. The app does not authenticate the post author as a wallet. An appeal reserves one `note:version` key and activates bound funding through state-only callbacks. **Judge appeal** becomes meaningful once that deposit is held. Validators answer UPHELD, OVERTURNED or UNCERTAIN using independently fetched counter-evidence.
 
-An overturn must change the evidence label. A protected callback sends the authorized update to Notes. **Settle appeal** then waits for the matching label update to finalize before allocating the writer bond to the appellant. An upheld appeal's deposit goes to the writer. An uncertain appeal returns the deposit to the appellant. A pending appeal blocks ordinary bond release even after the original time window closes. Avoid racing rechecks and funded appeals in this simulator release; the documented stale-version recovery limitation is not hidden behind an administrative override.
+An overturn must change the evidence label. A protected callback sends the authorized update to Notes. **Settle appeal** then waits for the matching label update to finalize before allocating the writer bond to the appellant. An upheld appeal's deposit goes to the writer. An uncertain appeal returns the deposit to the appellant. A pending appeal blocks ordinary bond release even after the original time window closes. Rechecks reject open appeals before fetching. Anyone can use **Cancel stale appeal** when the version no longer matches, or an open appeal outlives its deadline plus grace. Cancellation refunds the full deposit, closes the appeal, and permits normal writer release. **Existing appeal version** selects the original version for recovery after version drift. Resume controls finish stalled callbacks; unused funding can be refunded and withdrawn without opening an appeal.
 
 ## Withdraw and prove native credit
 
@@ -81,10 +81,12 @@ Validators read the fixed StudioNet receipt RPC. They check the finalized parent
 
 ## Inspect the proof and submit manually
 
-Run `npm run verify:network` to reread every recorded transaction and compare final state to the manifest. It signs nothing. Inspect raw receipts under `docs/proofs`, not just explorer status badges: a transaction may finalize with failed execution. The proof manifest lists anything not demonstrated live, including the original-window bond withdrawal until its deadline actually passes. Direct tests use time travel for that path and do not claim it happened on StudioNet.
+Run `npm run verify:network` to reread every recorded transaction and compare final state to the manifest. It signs nothing. Inspect raw receipts under `docs/proofs`, not just explorer status badges: a transaction may finalize with failed execution. The proof manifest lists anything not demonstrated live, including any lifecycle steps still listed as unproven. Direct tests use time travel for that path and do not claim it happened on StudioNet.
 
 Finally, inspect `docs/submission/portal-fields.json`. `npm run verify:submission` prints the constrained field lengths and checks every URL for HTTP 200. Use the 60-second script in DEMO.md with finalized evidence already on screen. Copy the fields into GenLayer Portal → Builder → Projects yourself. Footnote prepares the package and public links; it never submits the project to the Portal on your behalf.
 
-## Complete the deferred writer-bond proof
+## Wait for real maturity
 
-The UPHELD appeal keeps the writer bond locked until 14 October 2026. After maturity, run `$env:FOOTNOTE_CASE="supported"; ./scripts/deploy.ps1 -Step withdraw-bond`. It checks maturity before writing, persists hashes and the balance, and verifies native credit. Then rerun the network verifier, regenerate the manifest, commit receipts, and redeploy. Until then, this live proof remains unproven.
+Run `$env:FOOTNOTE_CASE="supported"; ./scripts/deploy.ps1 -Step withdraw-bond` only after the actual release time and appeal closure. For an unjudged appeal, wait until its deadline plus grace, then use `cancel-stale`, `withdraw-deposit`, and `withdraw-bond`. Scripts persist each hash before polling and resume it after timeout. Never advance the live clock or resubmit a pending write.
+
+Timing disclosure: the public demo deployment uses a 15-minute appeal window; production default is 72 hours. Demo grace is 10 minutes and bond delay is 15 minutes. Production defaults are 24 hours and 72 hours respectively.

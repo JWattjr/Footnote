@@ -13,6 +13,8 @@ class FootnoteRecheck(gl.Contract):
         note = json.loads(gl.get_contract_at(self.notes).view().get_note(note_id))
         require(note['status'] == 'active', 'note is awaiting finality')
         config = json.loads(gl.get_contract_at(self.notes).view().get_config())
+        require(not gl.get_contract_at(Address(config['appeals'])).view().has_open_appeal(note_id),
+                'note has an open appeal; recheck after it is decided')
         extra = json.loads(extra_sources_json)
         require(type(extra) is list and len(extra) <= 8, 'invalid added sources')
         urls = sources_checked(note['sources'] + extra, config['hosts'])

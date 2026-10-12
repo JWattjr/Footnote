@@ -7,7 +7,12 @@ from urllib.parse import urlsplit, quote
 from genlayer import *
 
 GEN = 10**18
-WINDOW = 72 * 3600
+DEFAULT_APPEAL_WINDOW = 72 * 3600
+DEFAULT_CANCEL_GRACE = 24 * 3600
+
+def checked_window(value, name):
+    require(type(value) is int and 300 <= value <= 30 * 86400, name + " must be between 5 minutes and 30 days")
+    return value
 EVIDENCE = ('SUPPORTED', 'CONTRADICTED', 'UNSUPPORTED', 'MISLEADING')
 TONES = ('RAGE_BAIT', 'NOT_RAGE_BAIT', 'UNCLEAR')
 

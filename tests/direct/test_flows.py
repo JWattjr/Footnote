@@ -19,15 +19,18 @@ def note(writer):
 @pytest.fixture(params=['recheck', 'appeals'])
 def flow(request, direct_vm, direct_deploy, direct_owner, direct_alice, monkeypatch):
     vm = direct_vm; vm._chain_id = 61999; warp(vm, 2000000000); vm.sender = direct_owner
-    name = request.param
-    c = direct_deploy('contracts/' + name + '.py', *([NOTES] if name == 'recheck' else [NOTES, BONDS]))
+    name, seconds = request.param if isinstance(request.param, tuple) else (request.param, 72*3600)
+    args = [NOTES] if name == 'recheck' else [NOTES, BONDS, seconds, 300 if seconds == 300 else 24*3600]
+    c = direct_deploy('contracts/' + name + '.py', *args)
     n = note(to_hex(direct_alice).lower()); writes = []
-    reads = {'get_note': lambda *args: json.dumps(n), 'get_config': json.dumps({'hosts': ['en.wikipedia.org', 'www.bbc.com']}),
-             'get_deposit': json.dumps({'status': 'held'})}
+    n['deadline'] = 2000000000+seconds
+    reads = {'get_note': lambda *args: json.dumps(n), 'get_config': json.dumps({'hosts': ['en.wikipedia.org', 'www.bbc.com'], 'appeals': APPEALS, 'appeal_window_seconds': seconds}),
+             'get_deposit': json.dumps({'status': 'held'}), 'has_deposit': True, 'has_open_appeal': False,
+             'get_funding': lambda *args: json.dumps({'status': 'funded', 'appellant': to_hex(direct_alice).lower(), 'amount': str(2*GEN)})}
     import genlayer.gl as sdk
     monkeypatch.setattr(sdk, 'get_contract_at', lambda address: Remote(reads, writes))
     vm.sender = direct_alice
-    return SimpleNamespace(name=name, c=c, vm=vm, n=n, writes=writes, m=module(name), alice=direct_alice)
+    return SimpleNamespace(name=name, c=c, vm=vm, n=n, reads=reads, writes=writes, m=module(name), alice=direct_alice)
 
 def mock(r, label='SUPPORTED', outcome='UPHELD', source=QUOTE):
     r.vm.clear_mocks()
@@ -48,7 +51,7 @@ def test_recheck_updates_as_a_new_version_or_appeal_finalizes(flow):
         finalize(r, 'finalize_recheck', op)
         assert json.loads(r.c.get_operation(op))['outcome'] == 'UPDATED'
     else:
-        r.vm.value = 2 * GEN; op = r.c.contest('water', 1, '[]'); r.vm.value = 0
+        op = r.c.contest('water', 1, '[]')
         finalize(r, 'finalize_deposit', op)
         assert r.c.judge(op) == 'OVERTURNED'
         assert not any(w[0] == 'apply_update' for w in r.writes)
@@ -72,7 +75,7 @@ def test_appeal_outcomes_duplicate_and_late(flow, outcome):
     r = flow
     if r.name != 'appeals': pytest.skip('Appeals-only scenario')
     mock(r, outcome=outcome)
-    r.vm.value = 2 * GEN; op = r.c.contest('water', 1, '[]')
+    op = r.c.contest('water', 1, '[]')
     with r.vm.expect_revert('one appeal'): r.c.contest('water', 1, '[]')
     r.vm.value = 0; finalize(r, 'finalize_deposit', op)
     assert r.c.judge(op) == outcome
@@ -81,8 +84,7 @@ def test_appeal_outcomes_duplicate_and_late(flow, outcome):
     assert not any(w[0] == 'apply_update' for w in r.writes)
     r.n['version'] = 2
     warp(r.vm, r.n['deadline'])
-    r.vm.value = 2 * GEN
-    with r.vm.expect_revert('72-hour'): r.c.contest('water', 2, '[]')
+    with r.vm.expect_revert('appeal window'): r.c.contest('water', 2, '[]')
 
 def test_host_and_callback_rejections_pre_fetch(flow, monkeypatch):
     r = flow
@@ -92,9 +94,10 @@ def test_host_and_callback_rejections_pre_fetch(flow, monkeypatch):
         with r.vm.expect_revert('source host'): r.c.recheck('water', '["https://evil.test/a"]')
         with r.vm.expect_revert('self callback'): r.c.finalize_recheck('x')
     else:
-        r.vm.value = GEN
+        good = r.reads['get_funding']
+        r.reads['get_funding'] = json.dumps({'status': 'funded', 'appellant': to_hex(r.alice).lower(), 'amount': str(GEN)})
         with r.vm.expect_revert('deposit'): r.c.contest('water', 1, '[]')
-        r.vm.value = 2 * GEN
+        r.reads['get_funding'] = good
         with r.vm.expect_revert('source host'): r.c.contest('water', 1, '["https://evil.test/a"]')
         with r.vm.expect_revert('self callback'): r.c.finalize_deposit('x')
         with r.vm.expect_revert('only Bonds'): r.c.mark_settled('x')

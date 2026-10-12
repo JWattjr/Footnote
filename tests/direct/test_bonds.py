@@ -9,15 +9,16 @@ PARENT = '0x' + 'aa' * 32
 CHILD = '0x' + 'bb' * 32
 
 @pytest.fixture
-def escrow(direct_vm, direct_deploy, direct_owner, direct_alice, direct_bob, monkeypatch):
+def escrow(request, direct_vm, direct_deploy, direct_owner, direct_alice, direct_bob, monkeypatch):
     vm = direct_vm; vm._chain_id = 61999; warp(vm, 2000000000); vm.sender = direct_owner
-    c = direct_deploy('contracts/bonds.py', NOTES); c.wire(APPEALS)
+    seconds = getattr(request, 'param', 72*3600)
+    c = direct_deploy('contracts/bonds.py', NOTES, seconds, seconds); c.wire(APPEALS)
     writer, appellant = to_hex(direct_alice).lower(), to_hex(direct_bob).lower()
     writes, sends, receipts = [], [], {}
     appeal = {'id': 'water:1', 'note_id': 'water', 'appellant': appellant, 'deposit': str(2 * GEN),
-              'writer': writer, 'status': 'finalized', 'outcome': 'OVERTURNED'}
-    note = {'status': 'active', 'history': [{'reason': 'APPEAL', 'operation': 'water:1'}]}
-    reads = {'get_appeal': lambda *args: json.dumps(appeal), 'get_note': lambda *args: json.dumps(note), 'has_open_appeal': False}
+              'writer': writer, 'funding_id': 'water:1:'+appellant, 'status': 'finalized', 'outcome': 'OVERTURNED'}
+    note = {'status': 'active', 'version': 1, 'deadline': 2000000000+seconds, 'history': [{'reason': 'APPEAL', 'operation': 'water:1'}]}
+    reads = {'get_appeal': lambda *args: json.dumps(appeal), 'get_note': lambda *args: json.dumps(note), 'has_open_appeal': False, 'has_appeal': False}
     import genlayer.gl as sdk
     monkeypatch.setattr(sdk, 'get_contract_at', lambda addr: Remote(reads, writes))
     m = module('bonds')
@@ -28,7 +29,7 @@ def escrow(direct_vm, direct_deploy, direct_owner, direct_alice, direct_bob, mon
     monkeypatch.setattr(sdk.nondet.web, 'post', lambda url, **kwargs: SimpleNamespace(status=200,
         body=json.dumps({'result': receipts.get(json.loads(kwargs['body'])['params'][0])}).encode()))
     r = SimpleNamespace(vm=vm, c=c, m=m, alice=direct_alice, bob=direct_bob, writer=writer, appellant=appellant,
-                        writes=writes, sends=sends, receipts=receipts, appeal=appeal, note=note)
+                        writes=writes, sends=sends, receipts=receipts, reads=reads, appeal=appeal, note=note)
     vm.sender = direct_alice; vm.value = 2 * GEN; c.stake('water'); vm.value = 0
     vm.sender = vm._contract_address; c.finalize_stake('water'); vm.deal(vm._contract_address, 2 * GEN)
     return r
@@ -37,9 +38,13 @@ def finalize(r, method, *args):
     r.vm.sender = r.vm._contract_address; getattr(r.c, method)(*args)
 
 def deposit(r):
-    r.vm.sender = bytes.fromhex(APPEALS[2:]); r.vm.value = 2 * GEN
-    r.c.hold_deposit('water:1', 'water', r.appellant, 2 * GEN); r.vm.value = 0
+    r.vm.sender = r.bob; r.vm.value = 2 * GEN
+    funding_id = r.c.fund_appeal('water', 1); r.vm.value = 0
+    finalize(r, 'finalize_funding', funding_id)
+    previous = r.appeal['status']; r.appeal['status'] = 'open'
+    r.vm.sender = bytes.fromhex(APPEALS[2:]); r.c.activate_deposit('water:1')
     finalize(r, 'finalize_hold', 'water:1'); r.vm.deal(r.vm._contract_address, 4 * GEN)
+    r.appeal['status'] = previous
 
 def evidence(r, claim_id, wallet, credited, attempt=1, parent=PARENT, child=CHILD):
     from genlayer.py import calldata
@@ -51,7 +56,7 @@ def evidence(r, claim_id, wallet, credited, attempt=1, parent=PARENT, child=CHIL
     r.receipts[child] = {'hash': child, 'status': 'FINALIZED', 'from_address': contract, 'to_address': wallet,
         'value': amount, 'type': 0, 'consensus_data': None, 'triggered_on': 'finalized', 'value_credited': credited}
 
-@pytest.mark.parametrize('outcome', ['OVERTURNED', 'UPHELD', 'UNCERTAIN'])
+@pytest.mark.parametrize('outcome', ['OVERTURNED', 'UPHELD', 'UNCERTAIN', 'CANCELLED'])
 def test_appeal_settlement_exact_allocations(escrow, outcome):
     r = escrow; r.appeal['outcome'] = outcome; deposit(r)
     r.vm.sender = r.bob; r.c.settle_appeal('water:1')
@@ -121,7 +126,7 @@ def test_forged_receipts_do_not_unlock_claim(escrow, change):
     assert json.loads(r.c.get_claim('bond:water'))['status'] == 'pending'
 
 def test_nonallowed_callers_and_unfinalized_overturn_rejected(escrow):
-    r = escrow; r.vm.sender = r.alice; r.vm.value = 2 * GEN
-    with r.vm.expect_revert('only Appeals'): r.c.hold_deposit('water:1', 'water', r.appellant, 2 * GEN)
-    r.vm.value = 0; deposit(r); r.note['status'] = 'pending_finality'; r.vm.sender = r.alice
+    r = escrow; r.vm.sender = r.alice
+    with r.vm.expect_revert('only Appeals'): r.c.activate_deposit('water:1')
+    deposit(r); r.note['status'] = 'pending_finality'; r.vm.sender = r.alice
     with r.vm.expect_revert('label update'): r.c.settle_appeal('water:1')
