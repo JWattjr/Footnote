@@ -4,11 +4,16 @@ import {TransactionStatus,TransactionHashVariant} from 'genlayer-js/types';
 import {studionet} from 'genlayer-js/chains';
 import {finalized,type Addresses} from '../lib/domain';
 import {rpc} from '../lib/network';
-type Proof={network:string;chainId:number;contracts:Addresses;transactions:Record<string,TransactionHash>;states:Record<string,unknown>;proofs:unknown[];rejections?:Record<string,string>;unproven:string[]};
+import {additionalProof} from '../scripts/additional-proof';
+import {cleanupLegacy} from '../scripts/cleanup-legacy';
+import {spawnSync} from 'node:child_process';
+type Proof={network:string;chainId:number;contracts:Addresses;transactions:Record<string,TransactionHash>;states:Record<string,unknown>;proofs:unknown[];preflights?:Record<string,string>;rejections?:Record<string,string>;unproven:string[]};
 const file='public/deployment.json';
 const encode=(v:unknown)=>JSON.stringify(v,(_,x)=>typeof x==='bigint'?String(x):x,2)+'\n';
 export async function deploy(client:GenLayerClient<typeof studionet>){
   if(client.chain?.id!==61999)throw Error('StudioNet 61999 required');
+  if(process.env.FOOTNOTE_STEP?.startsWith('cleanup-'))return cleanupLegacy(client);
+  if(process.env.FOOTNOTE_STEP?.startsWith('extra-'))return additionalProof(client);
   const p:Proof=JSON.parse(readFileSync(file,'utf8'));mkdirSync('docs/proofs',{recursive:true});
   const save=()=>writeFileSync(file,encode(p));
   const read=async(address:`0x${string}`,method:string,args:Parameters<typeof client.readContract>[0]['args']=[])=>client.readContract({address,functionName:method,args,transactionHashVariant:TransactionHashVariant.LATEST_FINAL});
@@ -33,6 +38,12 @@ export async function deploy(client:GenLayerClient<typeof studionet>){
   async function write(name:string,address:`0x${string}`,method:string,args:Parameters<typeof client.writeContract>[0]['args'],value=0n){
     let hash=p.transactions[name];
     if(!hash){
+      if(method==='create_note'){
+        const checked=spawnSync('python',['scripts/preflight-extra.py'],{encoding:'utf8'});
+        if(checked.status!==0)throw Error('Off-chain preflight failed; no write sent. '+checked.stdout+checked.stderr);
+        writeFileSync('docs/proofs/preflight-'+name+'.json',readFileSync('docs/proofs/extra-inputs.json'));
+        p.preflights??={};p.preflights[name]='docs/proofs/preflight-'+name+'.json';save();
+      }
       if(value>0n){const account=typeof client.account==='string'?client.account:client.account?.address;const balance=await client.getBalance({address:account!});if(balance<value)throw Error('Insufficient simulated GEN for '+name+'; no write sent. Balance wei '+balance);}
       hash=await client.writeContract({address,functionName:method,args,value});p.transactions[name]=hash;save();console.log('Submitted '+name+' '+hash);
     }

@@ -28,7 +28,7 @@ flowchart TD
 
 Notes exclusively owns note data. At creation it rejects invalid IDs, more than 20 open notes per writer, more than three notes per post per writer, malformed AT URIs and disallowed hosts before fetching or calling a model. It requires a finalized bond belonging to the writer. The fingerprint is SHA-256 of the exact decoded post text, without whitespace normalization: even a post-text edit should make the old post unavailable.
 
-The nondeterministic leader fetches post and page content. A validator runs an independent judgment, fetches the leader's quoted sources itself, validates exact quotation membership, and compares only evidence, tone, allegation flag and a sorted deduplicated citation set. Free text and incidental page bytes do not participate in the equivalence rule.
+The nondeterministic leader fetches post and page content. A validator runs an independent judgment, fetches the leader's quoted sources itself, validates exact quotation membership, and compares only evidence, tone, allegation flag and a sorted deduplicated cited URL set; quote spans are excluded from agreement, while leader quotes remain independently grounded after exact typography normalization. Free text and incidental page bytes do not participate in the equivalence rule.
 
 Creation and authorized updates stage a pending decision. A protected self-callback emitted on finalization appends a history version and exposes it as active. Only the wired Recheck and Appeals addresses may call `apply_update`, and their reason must match their role. Expected-version checks reject stale or concurrent updates. The allegation flag is sticky; plain code coerces forbidden allegation labels to UNSUPPORTED.
 

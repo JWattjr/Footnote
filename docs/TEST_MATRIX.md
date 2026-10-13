@@ -1,6 +1,6 @@
 # Test matrix
 
-Current baseline: **80 direct tests** (8 inapplicable parameter combinations explicitly skipped) and **7 frontend/domain unit tests** passed. TypeScript strict, ESLint, all four GenVM contract lint/schema checks, and Next.js production build passed. Counts and final browser/live evidence are also recorded in the proof manifest.
+Current baseline: **107 direct tests** (8 inapplicable parameter combinations explicitly skipped) and **7 frontend/domain unit tests** passed. TypeScript strict, ESLint, all four GenVM contract lint/schema checks, and Next.js production build passed. Counts and final browser/live evidence are also recorded in the proof manifest.
 
 | Requirement | Tests/evidence | Scope |
 |---|---|---|
@@ -8,12 +8,13 @@ Current baseline: **80 direct tests** (8 inapplicable parameter combinations exp
 | UNSUPPORTED valid and stored | Same label tests | Direct + finalized live |
 | Allegation forbidden labels forced neutral; no name, handle or text in state | `test_allegation_forced_unsupported_and_no_name_text_or_handle_state` | Direct |
 | Prompt injection cannot bypass grounding | `test_bad_quote_and_injection_cannot_bypass_grounding` | Direct |
-| Leader quote checked against own page | Grounding helper + actual validator callback tests | Direct mocked validator invocation |
+| Quote-independent URL-set agreement, typography and exact own-page grounding across Notes/Recheck/Appeals | `test_consensus.py` | 27 direct cases; fresh long-NASA live supported note |
 | Disallowed and lookalike hosts before fetch | Host parameterized tests + callback guards | Direct |
 | 429 then 200, decoded whitespace-stable canonical digest | Retry and canonical digest test | Direct |
 | Address exhaustion does not block another writer | 20 real method calls + second wallet creation | Direct |
 | Third inconclusive recheck rejected before fetch | `test_two_uncertain_rechecks_then_pre_fetch_rejection` | Direct |
-| Recheck emits version update; history retained | Flow tests + authorized append test | Direct cross-contract stub |
+| Added-source recheck changes UNSUPPORTED to SUPPORTED; both versions retained | Flow tests + authorized append + fresh live receipts | Direct + finalized live; desktop/mobile history |
+| Separate writer/appellant wallets, honest appeal settlement and exact credits | Two public CLI wallets, funding receipt, balance table | Finalized live; separate accounts, not verified human identities |
 | Unauthorized Notes updates / callback / wiring rejected | Notes and flow access-control tests | Direct |
 | Appeal overturn/uphold/uncertain, late/duplicate rejected | Appeal flow tests and settlement allocation tests | Direct |
 | Overturn waits for finalized Notes update | Bonds rejection test | Direct |
@@ -23,7 +24,7 @@ Current baseline: **80 direct tests** (8 inapplicable parameter combinations exp
 | Forged recipient, amount, absent credit, unfinalized child, wrong parent | Five forged-receipt cases | Direct |
 | Recheck open appeal guard before web/model work | `test_open_appeal_recheck_guard_before_fetch` | Direct + live expected rejection |
 | Recheck staging/finalization race preserves appealed version | `test_notes_rechecks_cannot_race_an_open_appeal` | Direct |
-| Version drift and never-judged deadline + grace cancellation; replay/judge-after-cancel rejected | `test_cancel_stale_closes_once_and_rejects_replays` | Direct; finalized live timeout cancellation |
+| Version drift and never-judged deadline + grace cancellation; replay/judge-after-cancel rejected | `test_cancel_stale_closes_once_and_rejects_replays` | Direct; archived v2 live timeout cancellation |
 | Exact full cancellation refund, writer release, appellant/writer/Bonds balances, no double payout | `test_cancel_exact_recipient_balances_and_writer_release` | Direct modeled native ledger |
 | Missing activation, unused and reserved funding, callback resumption | Recovery tests in `test_recovery.py` | Direct |
 | Production defaults, five-minute minimum, 30-day maximum and independent grace/release bounds | Constructor tests in `test_recovery.py` | 20 direct cases |
@@ -33,18 +34,22 @@ Current baseline: **80 direct tests** (8 inapplicable parameter combinations exp
 
 Direct mode executes one deployed contract per process. Cross-contract views/emissions are monkeypatched through `genlayer.gl.get_contract_at`, matching Bullseye's Windows-compatible harness. LLM replies are JSON-encoded. The validator callback test explicitly invokes the real comparator with independent mocked content; the suite does not claim full validator-network equivalence from direct mode alone.
 
-The Vercel production build and deployment passed on 12 October after the approval-review usage limit reset. The contract proof completed on 11 October. `proofs/production-verification.json` confirms the production address/hash journal, four live notes and timing disclosure; `proofs/production-browser-report.json` records desktop/mobile checks. `submission/link-check.json` records all 80 links returning HTTP 200. Portal fields use 145/180, 865/1000 and 357/500 characters.
+Fresh production verification reports are saved in `proofs/production-verification.json` and `proofs/production-browser-report.json`; field lengths and every HTTP 200 link are recorded in `submission/link-check.json`. Historical v2 reports remain archived.
+
+Generation 3 production deployment `dpl_7TDZX7PpMsXBo71Wapj15J42NfdG` is ready. Both history versions, their labels and sources passed checks at 1440- and 390-pixel viewports. All 111 packaged HTTP links returned 200. Portal fields are 145/180, 867/1000 and 319/500 characters. `proofs/verification-summary.json` records the tests, build and audit counts; PROOF_MANIFEST lists all 101 current/recovery hashes. `proofs/network-verification.txt` records the successful read-only audit.
 
 Eight parameter combinations do not apply to both contract fixtures and are explicitly skipped. The source-driven SUPPORTED-to-CONTRADICTED replay calls the actual Recheck method with mocked post/source responses, captures its authorized update, and verifies changed canonical evidence. Its public replay is labeled test-only.
 
 
 ## Fixed deployment target
 
-StudioNet 61999, generation 2.
+StudioNet 61999, generation 3.
 
 | Contract | Address |
 |---|---|
-| notes | [0xA71d317f87AAa68287901bAF1C6210F34AAD3675](https://explorer-studio.genlayer.com/contracts/0xA71d317f87AAa68287901bAF1C6210F34AAD3675) |
-| bonds | [0x55CE2f217257e9CB94C83954ff635c5131Ef71ba](https://explorer-studio.genlayer.com/contracts/0x55CE2f217257e9CB94C83954ff635c5131Ef71ba) |
-| recheck | [0x24AE6019820999664F95085e0775Cfe6968BB082](https://explorer-studio.genlayer.com/contracts/0x24AE6019820999664F95085e0775Cfe6968BB082) |
-| appeals | [0x45FC5215210E8D7A856cC630923a26b216cD9565](https://explorer-studio.genlayer.com/contracts/0x45FC5215210E8D7A856cC630923a26b216cD9565) |
+| notes | [0xDc5B83F68928E56B483d3Ec34F0f578f6dD8b2a5](https://explorer-studio.genlayer.com/contracts/0xDc5B83F68928E56B483d3Ec34F0f578f6dD8b2a5) |
+| bonds | [0x123Dbc27daCe9939A880E1fcE13Ef8FB60aA4Ea5](https://explorer-studio.genlayer.com/contracts/0x123Dbc27daCe9939A880E1fcE13Ef8FB60aA4Ea5) |
+| recheck | [0x5911648404b6C96d0DB941e1bCe430E018024c7B](https://explorer-studio.genlayer.com/contracts/0x5911648404b6C96d0DB941e1bCe430E018024c7B) |
+| appeals | [0x2F0e761a1b9584A391814a59cb86Bc8A0df5A2C4](https://explorer-studio.genlayer.com/contracts/0x2F0e761a1b9584A391814a59cb86Bc8A0df5A2C4) |
+
+Timing disclosure: the public demo deployment uses a 15-minute appeal window; production default is 72 hours. Demo grace is 10 minutes and bond release delay is 15 minutes.

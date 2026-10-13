@@ -12,6 +12,14 @@
 - One appeal per version, immutable constructor-configured original deadline, per-address open/post quotas, and pre-fetch UNCERTAIN limits. There is no small shared global quota.
 - Pull withdrawals reserve attempts; paid requires finalized positive native-credit evidence with exact parent and child binding. A failed transfer alone does not enable retries before verification finalizes.
 
+## Quote consensus fix and live evidence
+
+The v2 long-source NASA note failed consensus with result 7 because independently chosen valid quote spans were compared literally. An earlier leader attempt failed exact grounding on typography. Generation 3 compares evidence label, tone label, allegation flag and a sorted, de-duplicated cited URL set. Appeals also independently compares its outcome. Quote text is excluded from agreement, while each validator checks every leader quote against its own fetched canonical page. Only whitespace, non-breaking spaces, curly quotes and en/em dashes are normalized; leading/trailing quote punctuation is ignored. Matching remains case-sensitive and exact, with a minimum twelve-character normalized quote; changed words and fabricated quotes fail. Digests continue to describe each fetched canonical page without typography rewriting. Prompts request verbatim short sentences, and the leader's quotes are stored.
+
+The three public judging paths each have tests for different valid quotes agreeing, independent-page grounding, typography/whitespace normalization and changed-word/case rejection. The fresh live long-NASA supported note, UNSUPPORTED-to-SUPPORTED added-source recheck with retained history, and distinct-wallet appeal have finalized receipts. The two wallets are separate accounts operated for this demonstration; independent human identities or adversarial ownership are not claimed. The B challenge reuses the authentic NASA source and is judged honestly, without fabricated counterclaims.
+
+The same-URL publisher correction remains a mocked test-only replay. Forced version drift, callback failures/replays and cancellation adversaries remain direct-test-only. Timeout cancellation was genuinely shown on archived v2 and is not claimed as repeated on generation 3.
+
 ## Escrow liveness audit and fixed exits
 
 Timing disclosure: the public demo deployment uses a 15-minute appeal window; production default is 72 hours. The demo cancellation grace is 10 minutes and bond release delay is 15 minutes; production defaults are 24 hours and 72 hours respectively. All three constructor windows require 300–2,592,000 seconds. Release delay must cover the appeal window.
@@ -45,7 +53,7 @@ The spam requirement and automatic detection of a same-URL edit conflict after t
 
 A wire operation is deployer-only and one-time. Its addresses are not changeable afterward, so a flawed deployed contract requires replacement and explicit migration of the app configuration. There is no administrative label, payout-recipient or balance override.
 
-For the live proof, same-wallet writer/appellant demonstrates contract routing but does not prove independent participants. Direct tests use distinct fixture wallets and a controlled native ledger; they do not prove StudioNet consensus. Native transfer credit requires explicit protocol evidence, and unknown receipt schemas fail closed. Sources and network reads may throttle, and the API's short cache can delay presentation of a freshly finalized version.
+The live proof uses distinct signing wallets for writer and appellant, with a recorded A-to-B funding transaction, honest outcome, and exact verified credits. These are separate accounts operated for the demonstration; independently verified human identities are not claimed. Direct tests additionally model adversarial recipients and native delivery. Native transfer credit requires explicit protocol evidence, and unknown receipt schemas fail closed. Sources and network reads may throttle, and the API's short cache can delay presentation of a freshly finalized version.
 
 StudioNet GEN and chain state are simulated. This release has not undergone an external security audit. The documented tests and proof manifest define the actual verified scope; no broader guarantee is implied.
 
@@ -53,18 +61,20 @@ StudioNet GEN and chain state are simulated. This release has not undergone an e
 
 The runtime-only npm audit reports zero vulnerabilities. The full audit reports five high-severity development-tool entries, all arising from the same braces <=3.0.3 stack-exhaustion advisory through the Next ESLint plugin, fast-glob and micromatch. These tools consume the fixed repository lint patterns and are not shipped as application request handlers. npm proposes downgrading eslint-config-next to Next 14; that incompatible downgrade was not applied. The raw full/runtime audit reports are committed in docs/proofs. Revisit the upstream tooling patch before accepting arbitrary glob input in a build service.
 
-## Immutable legacy instance
+## Immutable legacy instances
 
-Generation 1 cannot be patched or rewired. Its original eight simulated GEN of writer bonds remain in the old Bonds contract under the original 72-hour deadlines on 14 October; redeployment does not migrate those funds. The legacy contracts retain the confirmed stale-appeal defect. The public app and new proofs target the fixed generation 2 addresses only. Do not fund or open new appeals on generation 1. Its existing bonds still have their ordinary mature-release path if no appeal is open; see the archived exact addresses and state in `docs/legacy/v1/deployment.json`.
+Generation 1 cannot be patched or rewired. Its original eight simulated GEN of writer bonds remain in the old Bonds contract under the original 72-hour deadlines on 14 October; redeployment does not migrate those funds. The legacy contracts retain the confirmed stale-appeal defect. The public app and new proofs target the fixed generation 3 addresses only. Do not fund or open new appeals on generation 1. Its existing bonds still have their ordinary mature-release path if no appeal is open; see the archived exact addresses and state in `docs/legacy/v1/deployment.json`.
 
+
+The funded v2 instance retains literal quote-span consensus. Its remaining eight GEN were released and withdrawn after maturity, with every native credit verified; see `docs/legacy/v2/cleanup/journal.json`. Its addresses are historical recovery targets only and are absent from the Portal fields.
 
 ## Fixed deployment target
 
-StudioNet 61999, generation 2.
+StudioNet 61999, generation 3.
 
 | Contract | Address |
 |---|---|
-| notes | [0xA71d317f87AAa68287901bAF1C6210F34AAD3675](https://explorer-studio.genlayer.com/contracts/0xA71d317f87AAa68287901bAF1C6210F34AAD3675) |
-| bonds | [0x55CE2f217257e9CB94C83954ff635c5131Ef71ba](https://explorer-studio.genlayer.com/contracts/0x55CE2f217257e9CB94C83954ff635c5131Ef71ba) |
-| recheck | [0x24AE6019820999664F95085e0775Cfe6968BB082](https://explorer-studio.genlayer.com/contracts/0x24AE6019820999664F95085e0775Cfe6968BB082) |
-| appeals | [0x45FC5215210E8D7A856cC630923a26b216cD9565](https://explorer-studio.genlayer.com/contracts/0x45FC5215210E8D7A856cC630923a26b216cD9565) |
+| notes | [0xDc5B83F68928E56B483d3Ec34F0f578f6dD8b2a5](https://explorer-studio.genlayer.com/contracts/0xDc5B83F68928E56B483d3Ec34F0f578f6dD8b2a5) |
+| bonds | [0x123Dbc27daCe9939A880E1fcE13Ef8FB60aA4Ea5](https://explorer-studio.genlayer.com/contracts/0x123Dbc27daCe9939A880E1fcE13Ef8FB60aA4Ea5) |
+| recheck | [0x5911648404b6C96d0DB941e1bCe430E018024c7B](https://explorer-studio.genlayer.com/contracts/0x5911648404b6C96d0DB941e1bCe430E018024c7B) |
+| appeals | [0x2F0e761a1b9584A391814a59cb86Bc8A0df5A2C4](https://explorer-studio.genlayer.com/contracts/0x2F0e761a1b9584A391814a59cb86Bc8A0df5A2C4) |

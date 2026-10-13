@@ -3,6 +3,7 @@ import json
 import re
 import html
 import hashlib
+import unicodedata
 from datetime import datetime
 from urllib.parse import urlsplit, quote
 from genlayer import *
@@ -33,6 +34,20 @@ def canonical(text):
 
 def fingerprint(text):
     return hashlib.sha256(text.encode('utf-8')).hexdigest()
+
+def normalized_text(text):
+    # Typography only: keep case and words exact, without fuzzy matching.
+    table = str.maketrans({'\u2018': "'", '\u2019': "'", '\u201c': '"', '\u201d': '"',
+                          '\u2013': '-', '\u2014': '-', '\u00a0': ' '})
+    return ' '.join(text.translate(table).split())
+
+def normalized_quote(text):
+    text = normalized_text(text)
+    while text and unicodedata.category(text[0]).startswith('P'):
+        text = text[1:].lstrip()
+    while text and unicodedata.category(text[-1]).startswith('P'):
+        text = text[:-1].rstrip()
+    return text
 
 def allowed(url, hosts):
     require(type(url) is str and len(url) <= 2048, 'invalid source URL')
@@ -124,7 +139,9 @@ def grounded(raw, inputs, urls, sticky_allegation=False):
         url, exact = citation.get('url'), citation.get('quote')
         require(url in urls and type(exact) is str and 12 <= len(exact) <= 700,
                 'citation must use a supplied source and an exact quote')
-        require(url in inputs['texts'] and exact in inputs['texts'][url], 'citation quote not found in fetched source')
+        needle = normalized_quote(exact)
+        require(len(needle) >= 12 and url in inputs['texts'] and needle in normalized_text(inputs['texts'][url]),
+                'citation quote not found in fetched source')
         citations.append((url, exact))
     citations = sorted(set(citations))
     require(label == 'UNSUPPORTED' or len(citations) > 0, 'non-UNSUPPORTED requires grounded citation')
@@ -139,7 +156,7 @@ def grounded(raw, inputs, urls, sticky_allegation=False):
 
 def compared(decision):
     return (decision['evidence_label'], decision['tone_label'], decision['IS_ALLEGATION_ABOUT_PERSON'],
-            sorted(set((c['url'], c['quote']) for c in decision['citations'])))
+            sorted(set(c['url'] for c in decision['citations'])))
 
 def judgment(uri, urls, expected='', sticky_allegation=False):
     def observe():
@@ -153,6 +170,7 @@ Detect accusations of crime or misconduct about identifiable people in IS_ALLEGA
 For these allow SUPPORTED only for a court record or reputable outlet explicitly reporting the accusation,
 otherwise UNSUPPORTED. Never imply guilt or innocence. PUBLIC_REPORT_EXPLICIT yes/no records this check.
 Every non-UNSUPPORTED decision needs one supplied URL and an exact quote from its decoded text.
+Copy quotes verbatim from the supplied text. Prefer one short sentence per cited URL.
 Return JSON: evidence_label, tone_label, IS_ALLEGATION_ABOUT_PERSON, PUBLIC_REPORT_EXPLICIT, citations [{url,quote}].
 Do not generate names, summaries or explanations outside quotes. DATA follows:\n'''
         prompt += packed({'post': inputs['post'], 'post_available': inputs['post_available'],

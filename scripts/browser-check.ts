@@ -11,6 +11,24 @@ for(const [name,width,height] of [['desktop',1440,1000],['mobile',390,844]] as c
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);
   if(overflow)errors.push(name+' horizontal overflow');
   await page.screenshot({path:folder+'/'+name+'.png',fullPage:true});
+  if(process.env.FOOTNOTE_LIVE_CHANGE_ID){
+    const id=process.env.FOOTNOTE_LIVE_CHANGE_ID;
+    await page.goto((process.env.FOOTNOTE_URL??'http://localhost:3117')+'/?note='+encodeURIComponent(id),{waitUntil:'networkidle'});
+    await page.locator('.case-top').filter({hasText:id}).waitFor();
+    if(await page.locator('.evidence-label strong').innerText()!=='Supported')errors.push(name+' live version 2 label missing');
+    if(await page.locator('.history-list button').count()!==2)errors.push(name+' both live versions missing');
+    const newSource='https://science.nasa.gov/earth/explore/earth-indicators/global-temperature/';
+    if(await page.locator('.source-section a').filter({has:page.locator('svg')}).evaluateAll((links,url)=>links.some(link=>(link as HTMLAnchorElement).href===url),newSource)!==true)errors.push(name+' new source missing');
+    if(!await page.locator('.source-section blockquote').count())errors.push(name+' new source quote missing');
+    if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))errors.push(name+' version 2 horizontal overflow');
+    await page.screenshot({path:folder+'/label-change-'+name+'-v2.png',fullPage:true});
+    await page.locator('.history-list button').filter({has:page.getByText('v1',{exact:true})}).click();
+    await page.evaluate(()=>window.scrollTo(0,0));
+    if(await page.locator('.evidence-label strong').innerText()!=='Unsupported')errors.push(name+' original Unsupported label missing');
+    if(await page.locator('.source-section a').evaluateAll(links=>links.some(link=>(link as HTMLAnchorElement).href==='https://svs.gsfc.nasa.gov/4964/'))!==true)errors.push(name+' original source missing');
+    if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))errors.push(name+' version 1 horizontal overflow');
+    await page.screenshot({path:folder+'/label-change-'+name+'-v1.png',fullPage:true});
+  }
   await page.getByRole('button',{name:'Write a note',exact:true}).first().click();
   await page.getByLabel('Note ID',{exact:true}).fill('browser-test');
   await page.getByLabel('Bluesky post AT URI').fill('invalid');
@@ -25,5 +43,5 @@ for(const [name,width,height] of [['desktop',1440,1000],['mobile',390,844]] as c
   if(await page.locator('.evidence-label strong').innerText()!=='Contradicted')errors.push('Test-only replay did not change label');
   await page.close();
 }
-await browser.close();writeFileSync(folder+'/browser-report.json',JSON.stringify({errors,viewports:[1440,390],url:process.env.FOOTNOTE_URL??'http://localhost:3117'},null,2));
+await browser.close();writeFileSync(folder+'/browser-report.json',JSON.stringify({checkedAt:new Date().toISOString(),errors,viewports:[1440,390],url:process.env.FOOTNOTE_URL??'http://localhost:3117',liveLabelChangeNote:process.env.FOOTNOTE_LIVE_CHANGE_ID??null},null,2));
 if(errors.length)throw Error(errors.join('; '));console.log('Desktop/mobile: render, form guards, explorer links, and no overflow passed.');

@@ -1,7 +1,9 @@
 import {readFileSync} from 'node:fs';
 import {finalized,type Addresses} from '../lib/domain';
 import {rpc,read,readClient} from '../lib/network';
-const p=JSON.parse(readFileSync('public/deployment.json','utf8')) as {contracts:Addresses;transactions:Record<string,string>;states:Record<string,unknown>;rejections?:Record<string,string>;accounting?:{wallet:`0x${string}`;walletBalance:string;bondsBalance:string;totals:{received:string;paid:string}}};
+import {verifyAdditionalProofs} from './verify-additional-proofs';
+import {verifyLegacyCleanup} from './verify-legacy-cleanup';
+const p=JSON.parse(readFileSync('public/deployment.json','utf8')) as {contracts:Addresses;transactions:Record<string,string>;states:Record<string,unknown>;rejections?:Record<string,string>;additionalProofs?:{labelChange:{operation?:string}};accounting?:{wallet:`0x${string}`;walletBalance:string;bondsBalance:string;totals:{received:string;paid:string}}};
 if(Object.keys(p.contracts).length!==4)throw Error('Four deployed contracts required');
 const allHashes=new Set(Object.values(p.transactions));
 for(const [name,hash] of Object.entries(p.transactions)){
@@ -24,7 +26,7 @@ for(const [name,hash] of Object.entries(p.transactions)){
 for(const [key,expected] of Object.entries(p.states)){
   let actual:unknown;
   if(key==='quota'){const q=expected as {writer:string;uri:string;value:unknown};actual={writer:q.writer,uri:q.uri,value:JSON.parse(String(await read(p.contracts.notes!,'get_quota',[q.writer,q.uri])))};}
-  else if(key==='recheck')actual=JSON.parse(String(await read(p.contracts.recheck!,'get_operation',['recheck-1'])));
+  else if(key==='recheck')actual=JSON.parse(String(await read(p.contracts.recheck!,'get_operation',[p.additionalProofs?.labelChange.operation??'recheck-1'])));
   else if(key==='config')actual=JSON.parse(String(await read(p.contracts.notes!,'get_config')));
   else if(key==='bondsConfig')actual=JSON.parse(String(await read(p.contracts.bonds!,'get_config')));
   else if(key==='appealsConfig')actual=JSON.parse(String(await read(p.contracts.appeals!,'get_config')));
@@ -45,4 +47,7 @@ if(p.accounting){
   if(JSON.stringify(totals)!==JSON.stringify(p.accounting.totals)||bondsBalance!==p.accounting.bondsBalance||walletBalance!==p.accounting.walletBalance||BigInt(bondsBalance)!==BigInt(totals.received)-BigInt(totals.paid))throw Error('Exact final escrow accounting differs');
   console.log('Wallet and Bonds exact balances and verified-paid totals match');
 }
-console.log('Read-only verification complete.');
+if(p.additionalProofs)await verifyAdditionalProofs();
+const legacy=JSON.parse(readFileSync('public/deployment.json','utf8')).legacyCleanup as string[]|undefined;
+for(const path of legacy??[])await verifyLegacyCleanup(path);
+console.log('Read-only verification complete, including additional proofs and historical recovery.');

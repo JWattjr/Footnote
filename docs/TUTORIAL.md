@@ -20,9 +20,9 @@ Use an AT URI such as `at://did:plc:…/app.bsky.feed.post/…`. A normal profil
 
 Supply one to eight HTTPS source URLs from the deployment's fixed host allowlist. The form exposes **Allowed source hosts**. Code checks exact hostname membership, rejecting lookalike domains, HTTP, credentials in the URL, nonstandard ports and fragments. Adding a source does not make it credible for every claim: relevance and substantive support still need validator judgment. Prefer a short stable source page that states the claim directly.
 
-Before the live demonstration, run `python scripts/preflight.py`. It fetches each exact public post and reads each selected source three times. It decodes HTML entities, removes script/style text, strips tags, collapses whitespace and hashes canonical extracted text. JSON is parsed and serialized with sorted keys first. Every canonical digest must match across all three fetches. The script also checks that the selected exact quotation appears. If a page returns an access-denied response or its digest varies, choose a different approved source before making a live note.
+Before the live demonstration, run `python scripts/preflight-extra.py`. It fetches each exact public post and reads each selected source three times. It decodes HTML entities, removes script/style text, strips tags, collapses whitespace and hashes canonical extracted text. JSON is parsed and serialized with sorted keys first. Every canonical digest must match across all three fetches. The script also checks that the selected exact quotation appears. If a page returns an access-denied response or its digest varies, choose a different approved source before making a live note.
 
-The climate example uses NASA's record-temperature visualization and a real public post about the 2024 temperature record. The unsupported example uses NASA's search-for-life page with a real prediction that future biosignature searches will never tell us anything. The latter is intentionally a source-scoped uncertainty demonstration: a source about present knowledge does not establish every prediction about the future. The actual result is the finalized validator judgment, not the builder's hoped-for label.
+The current long-source example uses NASA's global-temperature page and Scott Duncan's real post about the 2024 record. For temperature-update-2025, the original supplied NASA page covers 2021 and does not establish the post's 2025 claim; the finalized initial judgment is UNSUPPORTED. Adding the genuine NASA global-temperature page through Recheck produces SUPPORTED v2, retaining the original. This proves a change in supplied evidence, not that the claim lacked a source anywhere on the internet or that a publisher edited its page. The exact outcomes and per-write preflights are in PROOF_MANIFEST.md.
 
 ## Finalize the bond, then publish
 
@@ -44,7 +44,7 @@ Publishing runs the source judgment and stages a pending decision. Only a self-c
 
 ## Understand independent validation
 
-The leader and validators use `gl.vm.run_nondet_unsafe` with explicit functions. A validator does its own substantive judgment and checks the leader's quotation against its own fetch. Comparison includes only evidence label, tone label, person-allegation flag and a sorted deduplicated citation set. Free-form explanations never determine equivalence. Canonical source digests record the observation, while incidental HTML bytes do not determine agreement.
+The leader and validators use `gl.vm.run_nondet_unsafe` with explicit functions. A validator does its own substantive judgment and checks the leader's quotation against its own fetch. Comparison includes only evidence label, tone label, person-allegation flag and a sorted deduplicated cited URL set. Quote spans can differ across models. Every leader quote must still occur in each validator's own canonical page after whitespace, curly-quote and en/em-dash normalization; case and words stay exact. Free-form explanations never determine equivalence. Canonical source digests record the observation, while incidental HTML bytes do not determine agreement.
 
 ```python
 def compared(decision):
@@ -52,7 +52,7 @@ def compared(decision):
         decision['evidence_label'],
         decision['tone_label'],
         decision['IS_ALLEGATION_ABOUT_PERSON'],
-        sorted(set((c['url'], c['quote'])
+        sorted(set(c['url']
                    for c in decision['citations']))
     )
 ```
@@ -61,11 +61,19 @@ Both post and source text are untrusted data. An embedded instruction to “labe
 
 ## Recheck and preserve history
 
+The public demo's `temperature-update-2025` has finalized UNSUPPORTED v1 and SUPPORTED v2. Select either entry in **Follow the changes**; v2 shows the newly added NASA page and its stored leader quote.
+
+![Finalized Unsupported version one](images/label-change-desktop-v1.png)
+
+![Finalized Supported version two with the new NASA source](images/label-change-desktop-v2.png)
+
+The same history was checked at a 390-pixel mobile viewport: [v1](images/label-change-mobile-v1.png), [v2](images/label-change-mobile-v2.png).
+
 Expand **Recheck or challenge this note** and optionally add new allowed evidence URLs. Click **Recheck sources**. Recheck reads the current Notes version, rereads sources and produces a protected finalized update if the evidence or decision changes. Notes verifies the expected version and the authorized caller, then appends the new decision through its own callback. **Follow the changes** lets the reader select an earlier version. The first version is never edited in place.
 
 There is a spam boundary worth understanding. Two unchanged, inconclusive rechecks exhaust the version's input set. The third is rejected before fetching. To unlock another probe, add a distinct correction URL. Detecting a same-URL edit necessarily requires a fetch, so this release cannot automatically discover such an edit after that pre-fetch gate closes. The architecture and security notes document the tradeoff.
 
-A source change must be real to count as live proof. If no actual publisher correction can be observed, the demo uses the direct test path and explicitly calls it test-only. It never stages a fabricated publisher correction as a real change. Likewise, a source being unreachable does not prove the original claim has become false.
+Select temperature-update-2025 to inspect the finalized UNSUPPORTED v1 and SUPPORTED v2. A genuine existing NASA page was added to the supplied evidence. This proves an added-source label change, not a publisher edit or newly published page. A source change must be real to count as live proof. If no actual publisher correction can be observed, the demo uses the direct test path and explicitly calls it test-only. It never stages a fabricated publisher correction as a real change. Likewise, a source being unreachable does not prove the original claim has become false.
 
 ## Contest a version
 

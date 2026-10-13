@@ -8,7 +8,7 @@ try {
   $env:FOOTNOTE_STEP=$Step
   $env:NODE_OPTIONS=($previousNodeOptions+' --import=tsx').Trim()
   genlayer deploy
-  if($LASTEXITCODE -ne 0){throw "Live step failed; inspect the exact leader output above. Resume only the persisted hash."}
+  if($LASTEXITCODE -ne 0){throw "Step stopped; inspect the output above. Resume any persisted transaction hash without resubmitting it."}
 } finally {
   $env:NODE_OPTIONS=$previousNodeOptions
   if(Test-Path -LiteralPath $generated){Remove-Item -LiteralPath $generated}

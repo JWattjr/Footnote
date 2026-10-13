@@ -1,16 +1,16 @@
 # 60-second demo
 
-0–10 seconds: Open **Evidence desk**. Select the real climate-record post. Point to the public Bluesky post, its evidence label, the separately judged tone and its finalized status.
+0–10 seconds: Open **Evidence desk**. Select the real independent-climate-appeal post. Point to the public Bluesky post, its evidence label, the separately judged tone and its finalized status.
 
 10–22 seconds: Read the NASA exact quotation in **The sources**. Open its URL and show the canonical digest. Explain that the quote is grounded in a source and that source support is not a guarantee of truth.
 
-22–32 seconds: Select the finalized **open-question**. Show UNSUPPORTED as a valid label for a prediction the supplied evidence does not establish.
+22–32 seconds: Select **temperature-update-2025**, then v1 in **Follow the changes**. Show UNSUPPORTED: the original 2021 source does not establish the post's 2025 claim.
 
-32–42 seconds: Open **Follow the changes**. Select versions if a real source correction has produced a new version. Otherwise say: “The source-change path is tested with changed evidence in direct tests; no real live source correction is claimed.” Open **Live proof**, choose the test-only source-change replay, and click **Apply mocked correction** to show Supported becoming Contradicted. Clearly identify this as mocked direct execution.
+32–42 seconds: Select v2. Show the live SUPPORTED label, added authentic NASA source and retained v1. Explain that this is new evidence supplied to the note, not a staged publisher correction. The separate /replay remains explicitly mocked.
 
-42–52 seconds: Expand **Recheck or challenge this note**. Show **Recheck sources**, **Fund appeal · 2 GEN**, **Contest note**, **Judge appeal**, and **Settle appeal**. Explain the one-appeal-per-version rule and demo 15-minute deadline and the production 72-hour default.
+42–52 seconds: Expand **Recheck or challenge this note**. Show **Recheck sources**, **Fund appeal · 2 GEN**, **Contest note**, **Judge appeal**, and **Settle appeal**. Point to the distinct public writer/appellant addresses and honest UPHELD appeal in the manifest. Explain the one-appeal-per-version rule and demo 15-minute deadline and the production 72-hour default.
 
-52–60 seconds: Open **Live proof**, the four explorer links and the manifest. Show the paid appeal-deposit claim, its verified native credit, and exact 2-GEN balance delta. Show the writer-bond claim and verified credit when recorded; otherwise identify it as unproven. Show live timeout cancellation only if its FINALIZED receipts are recorded. End with the trust boundary: public sources, independent validators, immutable history, simulated StudioNet GEN.
+52–60 seconds: Open **Live proof**, the four current explorer links and the manifest. Show the paid appeal-deposit and writer-bond claims, their verified native credits and exact 2-GEN deltas. The balance table ends with zero held by the current Bonds contract. Timeout cancellation is archived v2 evidence and has not been repeated on v3. End with the trust boundary: supplied public sources, independent validators, immutable history and simulated StudioNet GEN.
 
 Do not spend the demo waiting for consensus. Demonstrate finalized evidence already recorded. Never stage a synthetic publisher correction as a real live change.
 
