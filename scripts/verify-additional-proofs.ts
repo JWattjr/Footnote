@@ -1,8 +1,10 @@
 import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
-import {rpc,read,readClient} from '../lib/network';
+import {rpc,readClient} from '../lib/network';
+import {verificationRead as read} from './verification-read';
+import {verifyPostProofAccounting} from './verify-post-proof-accounting';
 
-export async function verifyAdditionalProofs(){
+export async function verifyAdditionalProofs(currentBalances?:{walletA:string;walletB:string;bonds:string}){
   const p=JSON.parse(readFileSync('public/deployment.json','utf8'));
   const e=p.additionalProofs;
   assert.ok(e.completedAt,'Additional live proof is incomplete; do not claim it passed.');
@@ -50,9 +52,10 @@ export async function verifyAdditionalProofs(){
   }
   const client=readClient();
   const finish=e.balances.finish;
-  assert.equal(String(await client.getBalance({address:e.walletA})),finish.walletA);
-  assert.equal(String(await client.getBalance({address:e.walletB})),finish.walletB);
-  assert.equal(String(await client.getBalance({address:p.contracts.bonds})),finish.bonds);
+  const current=currentBalances??await verifyPostProofAccounting();
+  assert.equal(String(await client.getBalance({address:e.walletA})),current.walletA);
+  assert.equal(String(await client.getBalance({address:e.walletB})),current.walletB);
+  assert.equal(String(await client.getBalance({address:p.contracts.bonds})),current.bonds);
   const gen=10n**18n;
   const before=e.balances['funding-before'],after=e.balances['funding-after'];
   const fee=BigInt(e.fundingFeeWei??'0');

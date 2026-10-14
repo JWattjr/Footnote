@@ -157,7 +157,29 @@ Fresh snapshots precede each new note and the recheck in `docs/proofs/preflight-
 
 A → B funding: `0xc4fd62ee04620325b501cb5927722a2c724062dbd0c27ed810e4a82578e371d8`, 2 GEN. Measured funding fee: 0 wei. Parent withdrawals, native credit children and verification callbacks all require FINALIZED success. Outcome-specific balance deltas and escrow received-minus-verified-paid totals are checked by `verify:network`.
 
-Final escrow accounting: wallet A 12000999999999999956 wei; Bonds 0 wei; received 10000000000000000000 wei, verified paid 10000000000000000000 wei. Bonds balance equals received minus verified paid.
+Current escrow accounting: wallet A 19981999999999999956 wei; Bonds 0 wei; received 10000000000000000000 wei, verified paid 10000000000000000000 wei. Bonds balance equals received minus verified paid.
+
+### Later wallet activity and recovery
+
+The v3 start/end table above remains the historical proof outcome. Later wallet activity is recorded separately; v1 refunds are not presented as proceeds of the v3 appeal.
+
+| Accounting step | Wallet A (wei) | Wallet B (wei) | Current v3 Bonds (wei) |
+|---|---:|---:|---:|
+| Historical v3 finish | 12000999999999999956 | 0 | 0 |
+| Before v1 recovery, after other credited outflows | 11981999999999999956 | 0 | 0 |
+| After verified v1 refunds | 19981999999999999956 | 0 | 0 |
+
+Other credited outflows total 19000000000000000 wei (0.019 GEN), from seven existing transactions outside Footnote. Their funded value is verified, not the correctness or success of those unrelated contract judgments. V1 verified credits total 8000000000000000000 wei (8 GEN). The read-only verifier checks every accounting receipt, refund credit, historical delta and current balance.
+
+| Other activity receipt | Credited outflow (wei) |
+|---|---:|
+| [0xb7973a6c4925a4d6718a460868e7d930202643e3a38faa3d2e545bb805b738c4](https://explorer-studio.genlayer.com/transactions/0xb7973a6c4925a4d6718a460868e7d930202643e3a38faa3d2e545bb805b738c4) | 1000000000000000 |
+| [0x74674763eaf1501de82551b94ef69c9285693616cfc18a5981e83697a67b8624](https://explorer-studio.genlayer.com/transactions/0x74674763eaf1501de82551b94ef69c9285693616cfc18a5981e83697a67b8624) | 4000000000000000 |
+| [0x4a617328d1bea0ba54f989574de83830c090355017c473e5c1826dd6edb28587](https://explorer-studio.genlayer.com/transactions/0x4a617328d1bea0ba54f989574de83830c090355017c473e5c1826dd6edb28587) | 1000000000000000 |
+| [0x4673c01bc7b8bffbc6bfafb7210f4421e4efd76ba90b3355220712fc4b6832d3](https://explorer-studio.genlayer.com/transactions/0x4673c01bc7b8bffbc6bfafb7210f4421e4efd76ba90b3355220712fc4b6832d3) | 4000000000000000 |
+| [0x25f36ac616834459670f57cd4c7e175a7862e4a3a2b2299828f37ae8044dbd52](https://explorer-studio.genlayer.com/transactions/0x25f36ac616834459670f57cd4c7e175a7862e4a3a2b2299828f37ae8044dbd52) | 1000000000000000 |
+| [0x44a2cf51841fe165d7b3ecf9403f57e09400c8642916d20403c9cdd351be07dd](https://explorer-studio.genlayer.com/transactions/0x44a2cf51841fe165d7b3ecf9403f57e09400c8642916d20403c9cdd351be07dd) | 4000000000000000 |
+| [0x6031f959a68de3a7f6af83283ecbcafd9d68ea7a83810c7c0e5da3200ac6c569](https://explorer-studio.genlayer.com/transactions/0x6031f959a68de3a7f6af83283ecbcafd9d68ea7a83810c7c0e5da3200ac6c569) | 4000000000000000 |
 
 ## Historical deployment recovery
 
@@ -198,7 +220,42 @@ v2 recovery journal: [docs/legacy/v2/cleanup/journal.json](legacy/v2/cleanup/jou
 
 Exact historical start/end: `{"wallet": "4000999999999999956", "bonds": "8000000000000000000"}` → `{"wallet": "12000999999999999956", "bonds": "0"}`. Four 2-GEN verified credits recover eight GEN; the legacy escrow is zero.
 
-V1 recovery remains pending real maturity on 14 October 2026 (Africa/Lagos): climate-record 20:40:31, open-question 20:49:10, climate-quota-2 21:12:01 and climate-quota-3 21:15:14. The eight GEN cannot be withdrawn earlier. This future cleanup is not a completed live result. A one-time follow-up, `footnote-v1-bond-recovery`, is scheduled for 14 October at 21:16 Africa/Lagos, after the last deadline.
+v1 recovery journal: [docs/legacy/v1/cleanup/journal.json](legacy/v1/cleanup/journal.json). Complete: True.
+
+| Recovery step | Hash |
+|---|---|
+| climate-record-release | [0x760add68ee8d7dfafcda0ecdf546d3039af5077a078f05fdb8eef63e9ceb13af](https://explorer-studio.genlayer.com/transactions/0x760add68ee8d7dfafcda0ecdf546d3039af5077a078f05fdb8eef63e9ceb13af) |
+| climate-record-release-child-0 | [0x036ca1c274b4f49e7f3b714167afe93cf163afdb9cf9112d7eff4ef83f881a5f](https://explorer-studio.genlayer.com/transactions/0x036ca1c274b4f49e7f3b714167afe93cf163afdb9cf9112d7eff4ef83f881a5f) |
+| climate-record-release-child-0-child-0 | [0xfa70656492c035048fe2b937f732419f4a3ba4f360d92439112935d732b0ca50](https://explorer-studio.genlayer.com/transactions/0xfa70656492c035048fe2b937f732419f4a3ba4f360d92439112935d732b0ca50) |
+| climate-record-withdraw | [0x93e4ae11cc21fe255ef54a8c0438e67c0c460d2af80f518de02bd09bc8a7eef4](https://explorer-studio.genlayer.com/transactions/0x93e4ae11cc21fe255ef54a8c0438e67c0c460d2af80f518de02bd09bc8a7eef4) |
+| climate-record-withdraw-child-0 | [0x8c8a37cb71fb5d6755b490dbe8432d2fc427dc7ad697af6dbd78e4df887366e9](https://explorer-studio.genlayer.com/transactions/0x8c8a37cb71fb5d6755b490dbe8432d2fc427dc7ad697af6dbd78e4df887366e9) |
+| climate-record-verify | [0xa692d464d18fbffb594171b39a2dbf9b064d1afd079280efd89ba71de91742b9](https://explorer-studio.genlayer.com/transactions/0xa692d464d18fbffb594171b39a2dbf9b064d1afd079280efd89ba71de91742b9) |
+| climate-record-verify-child-0 | [0xfd464fc7843109616c18b0fe57f2d97fc9bc408fb3900d76ca2de62d83848a5b](https://explorer-studio.genlayer.com/transactions/0xfd464fc7843109616c18b0fe57f2d97fc9bc408fb3900d76ca2de62d83848a5b) |
+| open-question-release | [0x4f600844db01eb614ee412cf5d12bbe13abb7ebf269cba9b933cb0d9fc967a66](https://explorer-studio.genlayer.com/transactions/0x4f600844db01eb614ee412cf5d12bbe13abb7ebf269cba9b933cb0d9fc967a66) |
+| open-question-release-child-0 | [0x4934ef07611634534d9cd806c10799614484abc783d1ea60b15a5ae35dba938a](https://explorer-studio.genlayer.com/transactions/0x4934ef07611634534d9cd806c10799614484abc783d1ea60b15a5ae35dba938a) |
+| open-question-release-child-0-child-0 | [0x1b90da263bc34b09581b078735cca61672d25147e193c9792f7d04e66c58cb79](https://explorer-studio.genlayer.com/transactions/0x1b90da263bc34b09581b078735cca61672d25147e193c9792f7d04e66c58cb79) |
+| open-question-withdraw | [0xde36da3fb3fe24d73975db10d4cb59523025ffce3895e4a5dd6f0a5ae603e0bb](https://explorer-studio.genlayer.com/transactions/0xde36da3fb3fe24d73975db10d4cb59523025ffce3895e4a5dd6f0a5ae603e0bb) |
+| open-question-withdraw-child-0 | [0x347b3cdf39de1669efc5b4bd2ab353481befbfea42b8933bc9e14315cdb2a871](https://explorer-studio.genlayer.com/transactions/0x347b3cdf39de1669efc5b4bd2ab353481befbfea42b8933bc9e14315cdb2a871) |
+| open-question-verify | [0xcbad9c2dc6910c52fc13ddfe1e544639411f5eb3353d02186267f2ed8a41fee7](https://explorer-studio.genlayer.com/transactions/0xcbad9c2dc6910c52fc13ddfe1e544639411f5eb3353d02186267f2ed8a41fee7) |
+| open-question-verify-child-0 | [0x808252c8d787453950c0549f1d5c83b5243f42636317e09977e64c4c7c454d2c](https://explorer-studio.genlayer.com/transactions/0x808252c8d787453950c0549f1d5c83b5243f42636317e09977e64c4c7c454d2c) |
+| climate-quota-2-release | [0xa55ea7f988992f81afde181974fc9ccc97955220b42de071f283461ecaaa7b0e](https://explorer-studio.genlayer.com/transactions/0xa55ea7f988992f81afde181974fc9ccc97955220b42de071f283461ecaaa7b0e) |
+| climate-quota-2-release-child-0 | [0xd86b9d00663fdfef7407d0347c48f471eaa0de3be027add6b8e07891c80ef9be](https://explorer-studio.genlayer.com/transactions/0xd86b9d00663fdfef7407d0347c48f471eaa0de3be027add6b8e07891c80ef9be) |
+| climate-quota-2-release-child-0-child-0 | [0xbd13f0196ef86641f5e58b2f50b23ff10c043d9e6cb0f9935c82859484c433e9](https://explorer-studio.genlayer.com/transactions/0xbd13f0196ef86641f5e58b2f50b23ff10c043d9e6cb0f9935c82859484c433e9) |
+| climate-quota-2-withdraw | [0x6e8ba7f4a3f1398e413c6e7177845adbd887f75d9fbf1d0736411309c1288d47](https://explorer-studio.genlayer.com/transactions/0x6e8ba7f4a3f1398e413c6e7177845adbd887f75d9fbf1d0736411309c1288d47) |
+| climate-quota-2-withdraw-child-0 | [0xae00fc1079c16da5996c9137f7dd32c50e804ebc5c46b0135cb5862feb082fb9](https://explorer-studio.genlayer.com/transactions/0xae00fc1079c16da5996c9137f7dd32c50e804ebc5c46b0135cb5862feb082fb9) |
+| climate-quota-2-verify | [0xb8a7e498e32e92c30c3c0aae9983150732e6a474506a155f5afa04a38a437f22](https://explorer-studio.genlayer.com/transactions/0xb8a7e498e32e92c30c3c0aae9983150732e6a474506a155f5afa04a38a437f22) |
+| climate-quota-2-verify-child-0 | [0x035a33b422ef76dbdf88b0cf4d13734a2d157e0adff5d86b03301d0108b0cb94](https://explorer-studio.genlayer.com/transactions/0x035a33b422ef76dbdf88b0cf4d13734a2d157e0adff5d86b03301d0108b0cb94) |
+| climate-quota-3-release | [0xd9ac8ac06502171203ce444b9ae329c24c6e4b4267b45faa00523b0054e248c3](https://explorer-studio.genlayer.com/transactions/0xd9ac8ac06502171203ce444b9ae329c24c6e4b4267b45faa00523b0054e248c3) |
+| climate-quota-3-release-child-0 | [0xd8d496f0387cbc4292ee81105838743ff995088c5223ee9b3396f2be7f815f02](https://explorer-studio.genlayer.com/transactions/0xd8d496f0387cbc4292ee81105838743ff995088c5223ee9b3396f2be7f815f02) |
+| climate-quota-3-release-child-0-child-0 | [0x674d47fd8c87e69001fbb0c28d88093880e07db043efb3b2b9bc570e46d6007d](https://explorer-studio.genlayer.com/transactions/0x674d47fd8c87e69001fbb0c28d88093880e07db043efb3b2b9bc570e46d6007d) |
+| climate-quota-3-withdraw | [0x1d897ff4b03e8de0bc90714b89858abaa97175998ae6eaa0b4e75f64e67027fa](https://explorer-studio.genlayer.com/transactions/0x1d897ff4b03e8de0bc90714b89858abaa97175998ae6eaa0b4e75f64e67027fa) |
+| climate-quota-3-withdraw-child-0 | [0xd43f5d57605de85ff63d938cca70ec992354b92b50fe85d2d1fb295e8b919b29](https://explorer-studio.genlayer.com/transactions/0xd43f5d57605de85ff63d938cca70ec992354b92b50fe85d2d1fb295e8b919b29) |
+| climate-quota-3-verify | [0xeb652d2aff15c7b47aa48ab08c3a2c42cebfee53e2b9db890de2177ac4e0254a](https://explorer-studio.genlayer.com/transactions/0xeb652d2aff15c7b47aa48ab08c3a2c42cebfee53e2b9db890de2177ac4e0254a) |
+| climate-quota-3-verify-child-0 | [0x7cdb36ceab395cb68b3434d55dd7e3b8521d3d636e6e77b552b0da1d1f7d1efd](https://explorer-studio.genlayer.com/transactions/0x7cdb36ceab395cb68b3434d55dd7e3b8521d3d636e6e77b552b0da1d1f7d1efd) |
+
+Exact historical start/end: `{"wallet": "11981999999999999956", "bonds": "8000000000000000000"}` → `{"wallet": "19981999999999999956", "bonds": "0"}`. Four 2-GEN verified credits recover eight GEN; the legacy escrow is zero.
+
+V1 recovery is complete: climate-record, open-question, climate-quota-2 and climate-quota-3 each returned 2 GEN through a verified finalized native credit. Finalized preflight confirmed all original deadlines had passed and no appeal was open. The old v1 escrow is zero. No contract was changed or redeployed, no appeal was opened and no stake was added. The one-time follow-up is finished.
 
 ## Tests and verification
 
@@ -210,4 +267,4 @@ V1 recovery remains pending real maturity on 14 October 2026 (Africa/Lagos): cli
 - Same-URL publisher correction in /replay remains test-only. The live recheck adds an existing credible source; it does not claim a publisher edited or newly published that page.
 - Timeout cancel_stale is proven on archived v2; it has not been repeated on this deployment.
 
-The same-URL publisher correction in `/replay` remains explicitly mocked. Forced version drift, callback replay and outage recovery remain direct-test-only. A source occurring on an allowlisted host does not guarantee its truth. The Portal has not been submitted.
+The same-URL publisher correction in `/replay` remains explicitly mocked. Forced version drift, callback replay and outage recovery remain direct-test-only. A source occurring on an allowlisted host does not guarantee its truth. This recovery workflow does not submit to the Portal.

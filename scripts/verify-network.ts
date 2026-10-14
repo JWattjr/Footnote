@@ -1,11 +1,14 @@
 import {readFileSync} from 'node:fs';
 import {finalized,type Addresses} from '../lib/domain';
-import {rpc,read,readClient} from '../lib/network';
+import {rpc,readClient} from '../lib/network';
+import {verificationRead as read} from './verification-read';
 import {verifyAdditionalProofs} from './verify-additional-proofs';
 import {verifyLegacyCleanup} from './verify-legacy-cleanup';
+import {verifyPostProofAccounting} from './verify-post-proof-accounting';
 const p=JSON.parse(readFileSync('public/deployment.json','utf8')) as {contracts:Addresses;transactions:Record<string,string>;states:Record<string,unknown>;rejections?:Record<string,string>;additionalProofs?:{labelChange:{operation?:string}};accounting?:{wallet:`0x${string}`;walletBalance:string;bondsBalance:string;totals:{received:string;paid:string}}};
 if(Object.keys(p.contracts).length!==4)throw Error('Four deployed contracts required');
 const allHashes=new Set(Object.values(p.transactions));
+const currentBalances=await verifyPostProofAccounting();
 for(const [name,hash] of Object.entries(p.transactions)){
   const receipt=await rpc('eth_getTransactionByHash',[hash]);
   if(!receipt)throw Error(name+' missing receipt');
@@ -44,10 +47,10 @@ if(p.accounting){
   const client=readClient();
   const bondsBalance=String(await client.getBalance({address:p.contracts.bonds!}));
   const walletBalance=String(await client.getBalance({address:p.accounting.wallet}));
-  if(JSON.stringify(totals)!==JSON.stringify(p.accounting.totals)||bondsBalance!==p.accounting.bondsBalance||walletBalance!==p.accounting.walletBalance||BigInt(bondsBalance)!==BigInt(totals.received)-BigInt(totals.paid))throw Error('Exact final escrow accounting differs');
+  if(p.accounting.walletBalance!==currentBalances.walletA||JSON.stringify(totals)!==JSON.stringify(p.accounting.totals)||bondsBalance!==p.accounting.bondsBalance||walletBalance!==currentBalances.walletA||BigInt(bondsBalance)!==BigInt(totals.received)-BigInt(totals.paid))throw Error('Exact current escrow accounting differs');
   console.log('Wallet and Bonds exact balances and verified-paid totals match');
 }
-if(p.additionalProofs)await verifyAdditionalProofs();
+if(p.additionalProofs)await verifyAdditionalProofs(currentBalances);
 const legacy=JSON.parse(readFileSync('public/deployment.json','utf8')).legacyCleanup as string[]|undefined;
 for(const path of legacy??[])await verifyLegacyCleanup(path);
 console.log('Read-only verification complete, including additional proofs and historical recovery.');

@@ -38,7 +38,7 @@ Direct mode executes one deployed contract per process. Cross-contract views/emi
 
 Fresh production verification reports are saved in `proofs/production-verification.json` and `proofs/production-browser-report.json`; field lengths and every HTTP 200 link are recorded in `submission/link-check.json`. Historical v2 reports remain archived.
 
-Generation 3 production deployment `dpl_7TDZX7PpMsXBo71Wapj15J42NfdG` is ready. Both history versions, their labels and sources passed checks at 1440- and 390-pixel viewports. All 111 packaged HTTP links returned 200. Portal fields are 145/180, 867/1000 and 319/500 characters. `proofs/verification-summary.json` records the tests, build and audit counts; PROOF_MANIFEST lists all 101 current/recovery hashes. `proofs/network-verification.txt` records the successful read-only audit.
+Generation 3 production deployment `dpl_7TDZX7PpMsXBo71Wapj15J42NfdG` is ready. Both history versions, their labels and sources passed checks at 1440- and 390-pixel viewports. All 111 packaged HTTP links returned 200. Portal fields are 145/180, 867/1000 and 319/500 characters. `proofs/verification-summary.json` records the tests, build and audit counts; The historical v3 release listed 101 current/recovery hashes; the completed v1 cleanup extends the manifest to 129 Footnote hashes plus seven separately identified accounting receipts. `proofs/network-verification.txt` records the successful read-only audit.
 
 Eight parameter combinations do not apply to both contract fixtures and are explicitly skipped. The source-driven SUPPORTED-to-CONTRADICTED replay calls the actual Recheck method with mocked post/source responses, captures its authorized update, and verifies changed canonical evidence. Its public replay is labeled test-only.
 
@@ -55,3 +55,7 @@ StudioNet 61999, generation 3.
 | appeals | [0x2F0e761a1b9584A391814a59cb86Bc8A0df5A2C4](https://explorer-studio.genlayer.com/contracts/0x2F0e761a1b9584A391814a59cb86Bc8A0df5A2C4) |
 
 Timing disclosure: the public demo deployment uses a 15-minute appeal window; production default is 72 hours. Demo grace is 10 minutes and bond release delay is 15 minutes.
+
+## V1 recovery verification — 14 October 2026
+
+Four original 2-GEN bonds were released after real maturity and no-open-appeal finalized reads. All 28 new parent/child receipts finalized successfully; all four native credits are verified and claims are paid. The old escrow is zero. The v3 historical start/end balance table remains unchanged; seven later credited outflows outside Footnote (0.019 GEN) and the eight GEN recovery are reconciled separately. The network verifier binds native credits to the paid claim, original withdrawal parent, correct contract, recipient and amount. Current tests: 107 direct passed, 8 existing fixture skips, 11 TypeScript passed; strict typecheck, lint and build passed. The refreshed package link check reports 151 HTTP 200 links, including the supplied YouTube demo. The shared verifier paces gen_call reads below StudioNet's 30-per-minute cap and retries the same read after server-specified backoff.

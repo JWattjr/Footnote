@@ -11,7 +11,7 @@ for(const file of packageFiles){
 const limits:Record<string,number>={oneLiner:180,description:1000,expectedOutcome:500};
 for(const [key,max] of Object.entries(limits)){console.log(key+': '+p[key].length+'/'+max);if(p[key].length>max)throw Error(key+' exceeds limit');}
 if(!Array.isArray(p.howTo)||p.howTo.length!==4)throw Error('Exactly four how-to steps required');
-const urls=[...new Set([p.website,p.github,...Object.values(p.contractExplorerLinks),...p.evidenceLinks,...packageLinks,...[...Object.values(deployment.transactions),...recoveryHashes].map(hash=>'https://explorer-studio.genlayer.com/transactions/'+hash)])] as string[];
+const urls=[...new Set([p.website,p.github,...(p.demoUrl?[p.demoUrl]:[]),...Object.values(p.contractExplorerLinks),...p.evidenceLinks,...packageLinks,...[...Object.values(deployment.transactions),...recoveryHashes].map(hash=>'https://explorer-studio.genlayer.com/transactions/'+hash)])] as string[];
 const results=[];
 for(let offset=0;offset<urls.length;offset+=2){
   results.push(...await Promise.all(urls.slice(offset,offset+2).map(async url=>{

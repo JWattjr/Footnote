@@ -81,7 +81,20 @@ if e:
 
 if p.get('accounting'):
     a = p['accounting']
-    lines += ['', f"Final escrow accounting: wallet A {a['walletBalance']} wei; Bonds {a['bondsBalance']} wei; received {a['totals']['received']} wei, verified paid {a['totals']['paid']} wei. Bonds balance equals received minus verified paid."]
+    lines += ['', f"Current escrow accounting: wallet A {a['walletBalance']} wei; Bonds {a['bondsBalance']} wei; received {a['totals']['received']} wei, verified paid {a['totals']['paid']} wei. Bonds balance equals received minus verified paid."]
+if p.get('postProofAccounting'):
+    bridge = p['postProofAccounting']
+    activity = load(bridge['externalActivity']['path'])
+    lines += ['', '### Later wallet activity and recovery', '',
+        'The v3 start/end table above remains the historical proof outcome. Later wallet activity is recorded separately; v1 refunds are not presented as proceeds of the v3 appeal.', '',
+        '| Accounting step | Wallet A (wei) | Wallet B (wei) | Current v3 Bonds (wei) |', '|---|---:|---:|---:|',
+        f"| Historical v3 finish | {bridge['historicalFinish']['walletA']} | {bridge['historicalFinish']['walletB']} | {bridge['historicalFinish']['bonds']} |",
+        f"| Before v1 recovery, after other credited outflows | {int(bridge['historicalFinish']['walletA'])-int(activity['netOutflowWei'])} | {bridge['historicalFinish']['walletB']} | {bridge['historicalFinish']['bonds']} |",
+        f"| After verified v1 refunds | {bridge['current']['walletA']} | {bridge['current']['walletB']} | {bridge['current']['bonds']} |", '',
+        f"Other credited outflows total {activity['netOutflowWei']} wei (0.019 GEN), from seven existing transactions outside Footnote. Their funded value is verified, not the correctness or success of those unrelated contract judgments. V1 verified credits total {bridge['verifiedRecoveryCreditsWei']} wei (8 GEN). The read-only verifier checks every accounting receipt, refund credit, historical delta and current balance.", '',
+        '| Other activity receipt | Credited outflow (wei) |', '|---|---:|']
+    for row in activity['rows']:
+        lines.append(f"| [{row['hash']}](https://explorer-studio.genlayer.com/transactions/{row['hash']}) | {row['value']} |")
 lines += ['', '## Historical deployment recovery', '', 'Both old deployments are absent from Portal contract fields. Their immutable addresses are retained solely in archived diagnosis and recovery records.']
 for path in p.get('legacyCleanup', []):
     old = load(path)
@@ -89,10 +102,15 @@ for path in p.get('legacyCleanup', []):
     for name, h in old['transactions'].items():
         lines.append(f'| {name} | [{h}](https://explorer-studio.genlayer.com/transactions/{h}) |')
     lines += ['', f"Exact historical start/end: `{json.dumps(old['balances']['start'])}` → `{json.dumps(old['balances'].get('end', {}))}`. Four 2-GEN verified credits recover eight GEN; the legacy escrow is zero."]
-lines += ['', 'V1 recovery remains pending real maturity on 14 October 2026 (Africa/Lagos): climate-record 20:40:31, open-question 20:49:10, climate-quota-2 21:12:01 and climate-quota-3 21:15:14. The eight GEN cannot be withdrawn earlier. This future cleanup is not a completed live result. A one-time follow-up, `footnote-v1-bond-recovery`, is scheduled for 14 October at 21:16 Africa/Lagos, after the last deadline.', '',
+v1_path = 'docs/legacy/v1/cleanup/journal.json'
+if v1_path in p.get('legacyCleanup', []) and load(v1_path).get('complete'):
+    lines += ['', 'V1 recovery is complete: climate-record, open-question, climate-quota-2 and climate-quota-3 each returned 2 GEN through a verified finalized native credit. Finalized preflight confirmed all original deadlines had passed and no appeal was open. The old v1 escrow is zero. No contract was changed or redeployed, no appeal was opened and no stake was added. The one-time follow-up is finished.']
+else:
+    lines += ['', 'V1 recovery remains pending real maturity on 14 October 2026 (Africa/Lagos): climate-record 20:40:31, open-question 20:49:10, climate-quota-2 21:12:01 and climate-quota-3 21:15:14. The eight GEN cannot be withdrawn earlier. This future cleanup is not a completed live result. A one-time follow-up, `footnote-v1-bond-recovery`, is scheduled for 14 October at 21:16 Africa/Lagos, after the last deadline.']
+lines += ['',
     '## Tests and verification', '', '107 direct tests passed; 8 inapplicable scenario combinations skipped. Eleven TypeScript tests passed, including four wallet connection regressions with a mock provider. The wallet fix prevents overlapping permission requests and provides pending-request/cancellation recovery; desktop/mobile checks use controlled fixtures and make no live wallet writes. All four GenVM checks passed. Direct tests mock cross-contract calls, LLM/web content and native delivery; actual StudioNet receipts prove the live money path separately. Typecheck, lint, production build, network/link checks and desktop/mobile history checks are recorded in TEST_MATRIX and verification artifacts.', '',
     '## Still test-only or unproven', '']
 lines += ['- '+item for item in p['unproven']]
-lines += ['', 'The same-URL publisher correction in `/replay` remains explicitly mocked. Forced version drift, callback replay and outage recovery remain direct-test-only. A source occurring on an allowlisted host does not guarantee its truth. The Portal has not been submitted.']
+lines += ['', 'The same-URL publisher correction in `/replay` remains explicitly mocked. Forced version drift, callback replay and outage recovery remain direct-test-only. A source occurring on an allowlisted host does not guarantee its truth. This recovery workflow does not submit to the Portal.']
 Path('docs/PROOF_MANIFEST.md').write_text('\n'.join(lines)+'\n', encoding='utf-8')
 print(len(p['transactions']), 'current hashes documented with historical cleanup separately')
