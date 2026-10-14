@@ -4,23 +4,15 @@ import {useEffect,useState,useCallback,type FormEvent} from 'react';
 import {ArrowUpRight,ArrowRight,BookOpen,Check,ChevronRight,ExternalLink,FileText,History,MessageSquare,RefreshCw,ShieldCheck,Wallet,X} from 'lucide-react';
 import {evidenceLabels,evidenceText,toneText,sourceUrls,bondAmount,postLink,type Addresses,type Note,type Post,type Evidence} from '@/lib/domain';
 import {explorer} from '@/lib/network';
+import {connectWallet as connect,walletErrorMessage} from '@/lib/wallet';
 type Feed={notes:Note[];posts:Record<string,Post>;addresses:Addresses;hosts:string[];unproven:string[]};
 type Receipt={hash:`0x${string}`;action:string;status:string;target:string};
-type Provider={request:(arg:{method:string;params?:unknown[]})=>Promise<unknown>};
-async function connect(){
-  const provider=(window as unknown as {ethereum?:Provider}).ethereum;
-  if(!provider)throw Error('Enable a wallet with the GenLayer plugin to write. Reading is open to everyone.');
-  const accounts=await provider.request({method:'eth_requestAccounts'}) as string[];
-  if(!/^0x[a-fA-F0-9]{40}$/.test(accounts[0]??''))throw Error('Select a wallet account.');
-  const [{createClient},{studionet}]=await Promise.all([import('genlayer-js'),import('genlayer-js/chains')]);
-  const client=createClient({chain:studionet,account:accounts[0] as `0x${string}`,provider:provider as never});
-  await client.connect('studionet');return {client,address:accounts[0]};
-}
 export default function Desk(){
   const [feed,setFeed]=useState<Feed>();const [error,setError]=useState('');const [loading,setLoading]=useState(true);
   const [selected,setSelected]=useState('');const [filter,setFilter]=useState<Evidence|'ALL'>('ALL');
   const [view,setView]=useState<'desk'|'write'|'proof'>('desk');const [version,setVersion]=useState<number>();
   const [wallet,setWallet]=useState('');const [busy,setBusy]=useState(false);const [receipt,setReceipt]=useState<Receipt>();
+  const [connecting,setConnecting]=useState(false);
   const [id,setId]=useState('');const [uri,setUri]=useState('');const [sources,setSources]=useState('');const [stake,setStake]=useState('2');
   const [counter,setCounter]=useState('');const [bondReady,setBondReady]=useState('');const [withdrawHash,setWithdrawHash]=useState('');
   const [appealVersion,setAppealVersion]=useState('');
@@ -35,11 +27,12 @@ export default function Desk(){
     setError('Still awaiting finality. Resume this transaction to check the same hash.');
   }catch(e){setError((e as Error).message);}finally{setBusy(false);}}
   async function write(action:string,contract:keyof Addresses,method:string,args:(string|number)[],value=0n,target=selected){
+    if(connecting){setError('Finish the pending request in your wallet before making a write.');return;}
     if(receipt&&!['Finalized','Failed'].includes(receipt.status)){setError('Resume the pending transaction before making another write.');return;}
     setBusy(true);setError('');try{const address=feed?.addresses[contract];if(!address)throw Error('This contract is awaiting deployment.');
       const session=await connect();setWallet(session.address);const hash=await session.client.writeContract({address,functionName:method,args,value});
       const r:Receipt={hash,action,status:'Submitted',target};remember(r);setBusy(false);await resume(r);
-    }catch(e){setError((e as Error).message);setBusy(false);}}
+    }catch(e){setError(walletErrorMessage(e));setBusy(false);}}
   async function create(event:FormEvent){event.preventDefault();try{
     if(!/^[a-z0-9-]{1,64}$/.test(id))throw Error('Use a note ID with lowercase letters, numbers, and dashes.');
     if(!postLink(uri))throw Error('Paste the post AT URI with its DID, rather than its profile link.');
@@ -51,8 +44,8 @@ export default function Desk(){
   const note=feed?.notes.find(n=>n.id===selected);const entry=note?.history.find(v=>v.version===(version??note.version))??note?.history.at(-1);
   const decision=entry?.decision;const post=note&&feed?.posts[note.post_uri];
   const displayedSources=decision?.sources??(entry?.version===note?.version?note?.sources:[...new Set([...Object.keys(decision?.source_digests??{}),...(decision?.citations.map(c=>c.url)??[])])])??[];
-  const canAct=!!note&&note.status==='active'&&!busy;const appealId=note?note.id+':'+(appealVersion||note.version):'';
-  const canManage=!!note&&!busy;
+  const canAct=!!note&&note.status==='active'&&!busy&&!connecting;const appealId=note?note.id+':'+(appealVersion||note.version):'';
+  const canManage=!!note&&!busy&&!connecting;
   function counterSources(){return counter.trim()?sourceUrls(counter,feed?.hosts??[]):[];}
   async function action(action:string){if(!note)return;try{
     const sources=['Recheck sources','Contest note'].includes(action)?JSON.stringify(counterSources()):'[]';
@@ -97,7 +90,7 @@ export default function Desk(){
     <a href="#content" className="skip">Skip to notes</a>
     <header className="masthead"><button className="brand" onClick={()=>setView('desk')} aria-label="Footnote home">footnote<span className="brand-mark">*</span></button>
       <nav aria-label="Main"><button className={view==='desk'?'current':''} onClick={()=>setView('desk')}>Evidence desk</button><button className={view==='proof'?'current':''} onClick={()=>setView('proof')}>Live proof <ArrowUpRight size={14}/></button></nav>
-      <button className="wallet" disabled={busy} onClick={async()=>{try{const s=await connect();setWallet(s.address);setError('');}catch(e){setError((e as Error).message);}}}><Wallet size={16}/>{wallet?wallet.slice(0,6)+'…'+wallet.slice(-4):'Connect wallet'}</button>
+      <button className="wallet" disabled={busy||connecting} aria-busy={connecting} aria-label={connecting?'Waiting for wallet approval':wallet?'Connected wallet '+wallet:'Connect wallet'} onClick={async()=>{if(connecting||busy)return;setConnecting(true);setError('');try{const s=await connect();setWallet(s.address);}catch(e){setError(walletErrorMessage(e));}finally{setConnecting(false);}}}><Wallet size={16}/>{connecting?'Check your wallet…':wallet?wallet.slice(0,6)+'…'+wallet.slice(-4):'Connect wallet'}</button>
     </header>
     <main id="content">
       <div className="intro"><div><h1>Follow the evidence.</h1><p>A little context. A clearer conversation.</p></div><button className="primary" onClick={()=>{setView('write');setError('');}}><FileText size={16}/> Write a note <ArrowRight size={16}/></button></div>
@@ -107,7 +100,7 @@ export default function Desk(){
       {view==='write'?<section className="write-page"><button className="text-button" onClick={()=>setView('desk')}>Back to notes</button><h2>Add context to a public post.</h2><p>Validators read the post and your sources. Evidence and tone receive separate labels. The public demo locks your bond for 15 minutes and until any appeal closes. The production default is 72 hours.</p>
         <form onSubmit={create}><label>Note ID<input required value={id} onChange={e=>setId(e.target.value)} placeholder="your-note-id" maxLength={64}/></label><label>Bluesky post AT URI<input required value={uri} onChange={e=>setUri(e.target.value)} placeholder="at://did:plc:…/app.bsky.feed.post/…"/></label>
           <label>Source URLs<textarea required value={sources} onChange={e=>setSources(e.target.value)} placeholder="One HTTPS source per line" rows={4}/></label><details><summary>Allowed source hosts</summary><p className="hosts">{feed?.hosts.join(', ')||'Available after deployment.'}</p></details>
-          <label>Writer bond (simulated GEN)<input type="number" min={2} max={20} step={1} value={stake} onChange={e=>setStake(e.target.value)}/></label><button className="primary" disabled={busy||!feed?.addresses.notes}>{busy?'Waiting for finality…':bondReady===id?'Publish note':'Stake bond'}<ArrowRight size={16}/></button>
+          <label>Writer bond (simulated GEN)<input type="number" min={2} max={20} step={1} value={stake} onChange={e=>setStake(e.target.value)}/></label><button className="primary" disabled={busy||connecting||!feed?.addresses.notes}>{connecting?'Check your wallet…':busy?'Waiting for finality…':bondReady===id?'Publish note':'Stake bond'}<ArrowRight size={16}/></button>
           <p className="small">Two steps: finalize your bond, then publish your note. No post text or Bluesky handle is stored on-chain.</p></form></section>
       :view==='proof'?<section className="proof-page"><h2>Proof you can inspect.</h2><p>Every contract and transaction opens in the explorer. Finality alone does not prove successful execution, and a reserved withdrawal does not prove native credit.</p>
         <div className="contract-list">{Object.entries(feed?.addresses??{}).map(([name,address])=><a key={name} href={explorer+'/contracts/'+address} target="_blank" rel="noreferrer"><strong>{name}</strong><code>{address}</code><ArrowUpRight size={16}/></a>)}</div>

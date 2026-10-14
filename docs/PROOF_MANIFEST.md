@@ -202,7 +202,7 @@ V1 recovery remains pending real maturity on 14 October 2026 (Africa/Lagos): cli
 
 ## Tests and verification
 
-107 direct tests passed; 8 inapplicable scenario combinations skipped. Seven TypeScript tests passed. All four GenVM checks passed. Direct tests mock cross-contract calls, LLM/web content and native delivery; actual StudioNet receipts prove the live money path separately. Typecheck, lint, production build, network/link checks and desktop/mobile history checks are recorded in TEST_MATRIX and verification artifacts.
+107 direct tests passed; 8 inapplicable scenario combinations skipped. Eleven TypeScript tests passed, including four wallet connection regressions with a mock provider. The wallet fix prevents overlapping permission requests and provides pending-request/cancellation recovery; desktop/mobile checks use controlled fixtures and make no live wallet writes. All four GenVM checks passed. Direct tests mock cross-contract calls, LLM/web content and native delivery; actual StudioNet receipts prove the live money path separately. Typecheck, lint, production build, network/link checks and desktop/mobile history checks are recorded in TEST_MATRIX and verification artifacts.
 
 ## Still test-only or unproven
 

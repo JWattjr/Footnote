@@ -1,6 +1,6 @@
 # Test matrix
 
-Current baseline: **107 direct tests** (8 inapplicable parameter combinations explicitly skipped) and **7 frontend/domain unit tests** passed. TypeScript strict, ESLint, all four GenVM contract lint/schema checks, and Next.js production build passed. Counts and final browser/live evidence are also recorded in the proof manifest.
+Current baseline: **107 direct tests** (8 inapplicable parameter combinations explicitly skipped) and **11 frontend/domain unit tests** passed. TypeScript strict, ESLint, all four GenVM contract lint/schema checks, and Next.js production build passed. Counts and final browser/live evidence are also recorded in the proof manifest.
 
 | Requirement | Tests/evidence | Scope |
 |---|---|---|
@@ -29,6 +29,8 @@ Current baseline: **107 direct tests** (8 inapplicable parameter combinations ex
 | Missing activation, unused and reserved funding, callback resumption | Recovery tests in `test_recovery.py` | Direct |
 | Production defaults, five-minute minimum, 30-day maximum and independent grace/release bounds | Constructor tests in `test_recovery.py` | 20 direct cases |
 | URL checks, bigint bond precision, neutral copy, tone, safe post links, failed finalized execution | `tests/domain.test.ts` | Seven TypeScript tests |
+| One connection request shared across concurrent clicks; authorized accounts reused; pending and cancelled requests recover | `tests/wallet.test.ts` | Four TypeScript tests with an injected mock provider; no live wallet writes |
+| Pending-request guidance, disabled connection/write controls, cancellation and approved connection on desktop/mobile | `scripts/wallet-browser-check.ts`, `proofs/wallet-ui-check.json` | Controlled provider/feed fixtures; no real permission, signature or transaction |
 | Desktop/mobile UI, form validation, four explorer links, no horizontal overflow | `scripts/browser-check.ts` | Production Chrome; saved report/screenshots |
 | Contract finality, state matching, native credit | `npm run verify:network` | Read-only live proof |
 

@@ -63,7 +63,7 @@ An allegation of crime or misconduct about an identifiable person only permits S
 
 Bluesky post text is fetched off-chain for display and checked against its stored fingerprint. A deleted or changed post displays “post unavailable” while the note history stays available. StudioNet is a simulator; GEN here is simulated and this is not production financial infrastructure. Direct tests are mocked execution, not network-consensus proof.
 
-107 direct tests and seven TypeScript tests pass, with eight inapplicable scenario fixtures skipped. Typecheck, lint, all four GenVM checks, production build, read-only network verification and desktop/mobile history checks are recorded in [TEST_MATRIX.md](docs/TEST_MATRIX.md).
+107 direct tests and eleven TypeScript tests pass, with eight inapplicable scenario fixtures skipped. Four wallet regression tests cover overlapping requests, existing permissions, pending requests and cancellation recovery. Typecheck, lint, all four GenVM checks, production build, read-only network verification and desktop/mobile history checks are recorded in [TEST_MATRIX.md](docs/TEST_MATRIX.md).
 
 ## Submission package
 
